@@ -9,13 +9,19 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:lean4"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "vscode-lean4-extra.helloWorld",
-        "title": "Hello World"
+        "title": "Lean 4 Extra: Hello World"
+      },
+      {
+        "command": "vscode-lean4-extra.insertNamespaces",
+        "title": "Lean 4 Extra: Insert namespaces"
       }
     ]
   },
