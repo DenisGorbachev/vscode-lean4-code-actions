@@ -3,6 +3,7 @@
   "displayName": "Lean 4 Extra",
   "description": "Additional utilities for Lean 4 development",
   "version": "0.0.1",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.78.0"
   },
@@ -16,12 +17,27 @@
   "contributes": {
     "commands": [
       {
-        "command": "vscode-lean4-extra.helloWorld",
-        "title": "Lean 4 Extra: Hello World"
+        "command": "vscode-lean4-extra.autoImport",
+        "title": "Lean 4 Extra: Auto-import the definition under cursor",
+        "shortTitle": "Lean 4 Extra: Auto-import"
       },
       {
         "command": "vscode-lean4-extra.insertNamespaces",
         "title": "Lean 4 Extra: Insert namespaces"
+      },
+      {
+        "command": "vscode-lean4-extra.createFreewriteFile",
+        "title": "Lean 4 Extra: Create a freewrite file"
+      },
+      {
+        "command": "vscode-lean4-extra.textToList",
+        "title": "Lean 4 Extra: Convert a text to list line-by-line"
+      }
+    ],
+    "languages": [
+      {
+        "id": "lean4",
+        "configuration": "./language-configuration.json"
       }
     ]
   },
@@ -34,16 +50,25 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.78.0",
     "@types/glob": "^8.1.0",
+    "@types/lodash": "^4.14.195",
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
-    "@typescript-eslint/eslint-plugin": "^5.59.1",
-    "@typescript-eslint/parser": "^5.59.1",
+    "@types/vscode": "^1.78.0",
+    "@typescript-eslint/eslint-plugin": "^5.49.0",
+    "@typescript-eslint/parser": "^5.49.0",
+    "typescript": "^4.9.4",
+    "@vscode/test-electron": "^2.3.0",
     "eslint": "^8.39.0",
     "glob": "^8.1.0",
-    "mocha": "^10.2.0",
-    "typescript": "^5.0.4",
-    "@vscode/test-electron": "^2.3.0"
-  }
+    "mocha": "^10.2.0"
+  },
+  "dependencies": {
+    "lean4": "https://gitpkg.now.sh/leanprover/vscode-lean4/vscode-lean4",
+    "lodash": "^4.17.21",
+    "remeda": "^1.14.0"
+  },
+  "extensionDependencies": [
+    "leanprover.lean4"
+  ]
 }
