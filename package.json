@@ -23,6 +23,10 @@
         "shortTitle": "Lean 4 Extra: Auto-import"
       },
       {
+        "command": "vscode-lean4-extra.moveDefinitionToNewFile",
+        "title": "Lean 4 Extra: Move definition to a new file"
+      },
+      {
         "command": "vscode-lean4-extra.insertNamespaces",
         "title": "Lean 4 Extra: Insert namespaces"
       },
