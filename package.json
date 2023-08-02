@@ -4,6 +4,7 @@
   "description": "Additional utilities for Lean 4 development",
   "version": "0.0.1",
   "license": "MIT",
+  "publisher": "dengorbachev",
   "engines": {
     "vscode": "^1.78.0"
   },

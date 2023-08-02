@@ -1,9 +1,8 @@
-// The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 // import * as vscode from 'vscode';
 import * as path from 'path';
-import { identity, last } from 'remeda';
-import { kebabCase } from 'lodash'
+import { identity, last, sort } from 'remeda';
+import { kebabCase, sortBy } from 'lodash'
 import { nail } from './utils/string';
 import { writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
@@ -63,7 +62,7 @@ export function activate(context: ExtensionContext) {
 			window.showWarningMessage(`Text selection is empty: please select the name for auto-import in the editor`);
 			return;
 		}
-		const response: WorkspaceSymbol[] | null = await client.sendRequest('workspace/symbol', {
+		const symbols: WorkspaceSymbol[] | null = await client.sendRequest('workspace/symbol', {
 			query
 		}).catch((e) => {
 			if (e instanceof Error) {
@@ -74,17 +73,27 @@ export function activate(context: ExtensionContext) {
 				return;
 			}
 		})
-		if (!response) {
+		if (!symbols) {
 			window.showErrorMessage(`Received a null response from LSP`);
 			return;
 		}
-		const items: QuickPickItem[] = response.map((symbol, index) => ({
+		const currentPath = getLeanImportPathFromAbsoluteFilePath(workspaceFolder, editor.document.fileName)
+		const symbolsAnchored = symbols.filter(({ name }) => name.endsWith(query));
+		const infosRaw = symbolsAnchored.map(({ name, location }) => {
+			const path = getLeanImportPathFromAbsoluteFilePath(workspaceFolder, location.uri);
+			return ({
+				name,
+				path,
+				closeness: longestCommonPrefix([currentPath, path]).length
+			});
+		})
+		const infos = sortBy(infosRaw, i => -i.closeness /* most close first */)
+		const items: QuickPickItem[] = infos.map((symbol, index) => ({
 			label: symbol.name,
-			description: getLeanImportPathFromAbsoluteFilePath(workspaceFolder, symbol.location.uri),
+			description: symbol.path,
 			picked: index === 0
 		}))
 		const result = await window.showQuickPick(items, {
-			title: 'Auto-import symbol',
 			placeHolder: 'Pick a symbol',
 			matchOnDescription: true
 		})
@@ -95,7 +104,6 @@ export function activate(context: ExtensionContext) {
 		editor.edit(editBuilder => {
 			editBuilder.insert(insertPosition, `import ${leanImportPath}\n`);
 		});
-		// TODO: Sort by distance from the current file
 	}
 
 	const getNamespaces = (currentFilePath: string) => {
@@ -407,3 +415,14 @@ const lastOfIterator = (max: number = 1024) => <T>(iterator: IterableIterator<T>
 	return result
 };
 
+function longestCommonPrefix(strings: string[]) {
+	// check border cases
+	if (strings.length == 0) return ""
+	if (strings.length == 1) return strings[0]
+	let i = 0;
+	// while all words have the same character at position i, increment i
+	while (strings[0][i] && strings.every(w => w[i] === strings[0][i]))
+		i++;
+	// prefix is the substring from the beginning to the last successfully checked i
+	return strings[0].substring(0, i);
+}
