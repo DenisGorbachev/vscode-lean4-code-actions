@@ -1,89 +1,28 @@
 // Import the module and reference it with the alias vscode in your code below
 // import * as vscode from 'vscode';
 import * as path from 'path';
-import { identity, last, sort } from 'remeda';
-import { kebabCase } from 'lodash'
-import { nail } from './utils/string';
-import { writeFile } from 'fs/promises';
-import { existsSync } from 'fs';
-import { todo } from './utils/todo';
-import { CompletionItem, CompletionItemKind, CompletionItemLabel, ExtensionContext, Position, TextDocument, TextEditor, Uri, commands, env, languages, window, workspace } from 'vscode';
+import { identity, last } from 'remeda';
+import { kebabCase } from 'lodash';
+import { CompletionItem, CompletionItemKind, CompletionItemLabel, ExtensionContext, Position, TextDocument, commands, env, languages, window } from 'vscode';
 import { autoImport } from './commands/autoImport';
-import { Line, Segment, join, glue, joinAllSegments } from './utils/text';
-import { getNamespaces, toNamespace, getNamespacesSegments } from './utils/lean';
+import { joinAllSegments } from './utils/text';
+import { getNamespaces, getNamespacesSegments } from './utils/lean';
 import { insertNamespaces } from './commands/insertNamespaces';
 import { moveDefinitionToNewFile } from './commands/moveDefinitionToNewFile';
+import { createFreewriteFile } from './commands/createFreewriteFile';
+import { convertTextToList } from './commands/convertTextToList';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: ExtensionContext) {
-	const getFreewriteFileContent = (namespace: string) => {
-		return nail(`
-			import Playbook.Std
-			import Playbook.Generic
-			
-			open Playbook Std Generic
-			
-			namespace Freewrite
-			
-			namespace ${namespace}
-			
-			def thoughts : Thoughts := []
 
-			def wishes : Thoughts := []
-		`)
-	}
+	const insertNamespacesCommand = commands.registerCommand('vscode-lean4-extra.insertNamespaces', insertNamespaces);
 
-	const getFreewriteNamespace = (now: Date) => 'on_' + now.toISOString().slice(0, 10).replace(/-/g, '_')
+	const createFreewriteFileCommand = commands.registerCommand('vscode-lean4-extra.createFreewriteFile', createFreewriteFile);
 
+	const convertTextToListCommand = commands.registerCommand('vscode-lean4-extra.convertTextToList', convertTextToList);
 
-	let insertNamespacesCommand = commands.registerCommand('vscode-lean4-extra.insertNamespaces', insertNamespaces);
+	const autoImportCommand = commands.registerCommand('vscode-lean4-extra.autoImport', autoImport);
 
-	let createFreewriteFileCommand = commands.registerCommand('vscode-lean4-extra.createFreewriteFile', async () => {
-		const { workspaceFolders } = workspace
-		if (!workspaceFolders) {
-			window.showErrorMessage('No workspace folders found');
-			return;
-		}
-
-		const workspaceFolder = workspaceFolders[0];
-		if (!workspaceFolder) {
-			window.showErrorMessage('No workspace folder found');
-			return;
-		}
-
-		const root = workspaceFolder.uri.fsPath;
-		const now = new Date()
-
-		const ns = getFreewriteNamespace(now)
-		const filename = `${root}/Freewrite/${ns}.lean`
-		if (!existsSync(filename)) {
-			const content = getFreewriteFileContent(ns)
-			await writeFile(filename, content)
-		}
-		await commands.executeCommand('vscode.open', Uri.file(filename));
-	});
-
-	let textToListCommand = commands.registerCommand('vscode-lean4-extra.textToList', async () => {
-		const editor = window.activeTextEditor;
-		if (!editor) {
-			window.showErrorMessage('No active text editor');
-			return;
-		}
-
-		const selection = editor.selection;
-		const text = editor.document.getText(selection);
-		const lines = text.split('\n').map(line => line.trim()).filter(line => line.length);
-		const linesRendered = lines.map(line => `"${line}"`).join(",\n")
-
-		editor.edit(editBuilder => {
-			editBuilder.replace(selection, linesRendered);
-		});
-	});
-
-	let autoImportCommand = commands.registerCommand('vscode-lean4-extra.autoImport', autoImport);
-
-	let moveDefinitionToNewFileCommand = commands.registerCommand('vscode-lean4-extra.moveDefinitionToNewFile', moveDefinitionToNewFile);
+	const moveDefinitionToNewFileCommand = commands.registerCommand('vscode-lean4-extra.moveDefinitionToNewFile', moveDefinitionToNewFile);
 
 	// const getInductiveSegments = (name: string | undefined) => {
 
@@ -224,7 +163,7 @@ export function activate(context: ExtensionContext) {
 
 	context.subscriptions.push(insertNamespacesCommand);
 	context.subscriptions.push(createFreewriteFileCommand);
-	context.subscriptions.push(textToListCommand);
+	context.subscriptions.push(convertTextToListCommand);
 	context.subscriptions.push(autoImportCommand);
 	context.subscriptions.push(moveDefinitionToNewFileCommand);
 	context.subscriptions.push(completions);

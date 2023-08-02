@@ -35,7 +35,7 @@
         "title": "Lean 4 Extra: Create a freewrite file"
       },
       {
-        "command": "vscode-lean4-extra.textToList",
+        "command": "vscode-lean4-extra.convertTextToList",
         "title": "Lean 4 Extra: Convert a text to list line-by-line"
       }
     ],
