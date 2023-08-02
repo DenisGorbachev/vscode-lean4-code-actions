@@ -1,6 +1,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
+// import * as vscode from 'vscode';
 import * as path from 'path';
 import { identity, last } from 'remeda';
 import { kebabCase } from 'lodash'
@@ -9,6 +9,9 @@ import { writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { Exports } from 'lean4/src/exports'
 import { WorkspaceSymbol } from 'vscode-languageserver-types'
+import { todo } from './utils/todo';
+import { CompletionItem, CompletionItemKind, CompletionItemLabel, ExtensionContext, Position, QuickPickItem, TextDocument, TextEditor, Uri, commands, env, extensions, languages, window, workspace } from 'vscode';
+import { sep } from 'path';
 
 function stripExtension(filename: string) {
 	const parsed = path.parse(filename);
@@ -20,68 +23,85 @@ type Segment = Line[]
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export function activate(context: ExtensionContext) {
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "vscode-lean4-extra" is now active!');
 
-	const getSelection = () => {
-		const editor = vscode.window.activeTextEditor;
-		if (!editor) return;
+	const getSelectionText = (editor: TextEditor) => {
 		// const wordRange = editor.document.getWordRangeAtPosition(editor.selection.active)
 		// return editor.document.getText(wordRange)
 		return editor.document.getText(editor.selection)
 	}
 
 	const getImportFilename = async () => {
+		const editor = window.activeTextEditor
+		if (!editor) {
+			window.showErrorMessage('No active editor found');
+			return;
+		}
 		// console.log('>>> getImportFilename')
-		const languages = await vscode.languages.getLanguages()
 		const leanExtensionId = 'leanprover.lean4';
-		const leanExtension = vscode.extensions.getExtension(leanExtensionId);
+		const leanExtension = extensions.getExtension(leanExtensionId);
 		if (!leanExtension) {
-			vscode.window.showErrorMessage(`${leanExtensionId} extension is not available`);
+			window.showErrorMessage(`${leanExtensionId} extension is not available`);
 			return;
 		}
 		const { clientProvider } = leanExtension.exports as Exports
 		if (!clientProvider) {
-			vscode.window.showErrorMessage(`${leanExtensionId} extension.clientProvider is not available`);
+			window.showErrorMessage(`${leanExtensionId} extension.clientProvider is not available`);
 			return;
 		}
 		const client = clientProvider.getActiveClient()
 		if (!client) {
-			vscode.window.showErrorMessage(`${leanExtensionId} extension.clientProvider.getActiveClient() is not available`);
+			window.showErrorMessage(`${leanExtensionId} extension.clientProvider.getActiveClient() is not available`);
 			return;
 		}
-		const query = getSelection()
+		const workspaceFolder = client.getWorkspaceFolder()
+		const query = getSelectionText(editor)
 		if (!query) {
-			vscode.window.showWarningMessage(`Text selection is empty: please select the name for auto-import in the editor`);
+			window.showWarningMessage(`Text selection is empty: please select the name for auto-import in the editor`);
 			return;
 		}
 		const response: WorkspaceSymbol[] | null = await client.sendRequest('workspace/symbol', {
 			query
 		}).catch((e) => {
 			if (e instanceof Error) {
-				vscode.window.showErrorMessage(e.toString());
+				window.showErrorMessage(e.toString());
 				return;
 			} else {
-				vscode.window.showErrorMessage(`Unknown error occurred while sending a request to LSP: ${e}`);
+				window.showErrorMessage(`Unknown error occurred while sending a request to LSP: ${e}`);
 				return;
 			}
 		})
 		if (!response) {
-			vscode.window.showErrorMessage(`Received a null response from LSP`);
+			window.showErrorMessage(`Received a null response from LSP`);
 			return;
 		}
-		console.log(response)
-		vscode.window.showInformationMessage('Executed successfully');
-		// TODO: Show a picker
+		const items: QuickPickItem[] = response.map((symbol, index) => ({
+			label: symbol.name,
+			description: getLeanImportPathFromAbsoluteFilePath(workspaceFolder, symbol.location.uri),
+			picked: index === 0
+		}))
+		const result = await window.showQuickPick(items, {
+			title: 'Auto-import symbol',
+			placeHolder: 'Pick a symbol',
+			matchOnDescription: true
+		})
+		if (!result) return;
+		if (!result.description) throw new Error('Result must have a description')
+		const leanImportPath = result.description
+		const insertPosition = getImportInsertPosition(editor)
+		editor.edit(editBuilder => {
+			editBuilder.insert(insertPosition, `import ${leanImportPath}\n`);
+		});
 		// TODO: Sort by distance from the current file
 	}
 
 	const getNamespaces = (currentFilePath: string) => {
-		const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(currentFilePath));
+		const workspaceFolder = workspace.getWorkspaceFolder(Uri.file(currentFilePath));
 		if (!workspaceFolder) {
-			vscode.window.showErrorMessage('No workspace selected');
+			window.showErrorMessage('No workspace selected');
 			return;
 		}
 
@@ -132,10 +152,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const toNamespace = (names: string[]) => `namespace ${names.join('.')}`
 
-	let insertNamespacesCommand = vscode.commands.registerCommand('vscode-lean4-extra.insertNamespaces', () => {
-		const editor = vscode.window.activeTextEditor;
+	let insertNamespacesCommand = commands.registerCommand('vscode-lean4-extra.insertNamespaces', () => {
+		const editor = window.activeTextEditor;
 		if (!editor) {
-			vscode.window.showErrorMessage('No active editor found');
+			window.showErrorMessage('No active editor found');
 			return;
 		}
 		const text = combineAll(getNamespacesSegments(editor.document.fileName));
@@ -147,16 +167,16 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	let createFreewriteFileCommand = vscode.commands.registerCommand('vscode-lean4-extra.createFreewriteFile', async () => {
-		const { workspaceFolders } = vscode.workspace
+	let createFreewriteFileCommand = commands.registerCommand('vscode-lean4-extra.createFreewriteFile', async () => {
+		const { workspaceFolders } = workspace
 		if (!workspaceFolders) {
-			vscode.window.showErrorMessage('No workspace folders found');
+			window.showErrorMessage('No workspace folders found');
 			return;
 		}
 
 		const workspaceFolder = workspaceFolders[0];
 		if (!workspaceFolder) {
-			vscode.window.showErrorMessage('No workspace folder found');
+			window.showErrorMessage('No workspace folder found');
 			return;
 		}
 
@@ -169,13 +189,13 @@ export function activate(context: vscode.ExtensionContext) {
 			const content = getFreewriteFileContent(ns)
 			await writeFile(filename, content)
 		}
-		await vscode.commands.executeCommand('vscode.open', vscode.Uri.file(filename));
+		await commands.executeCommand('vscode.open', Uri.file(filename));
 	});
 
-	let textToListCommand = vscode.commands.registerCommand('vscode-lean4-extra.textToList', async () => {
-		const editor = vscode.window.activeTextEditor;
+	let textToListCommand = commands.registerCommand('vscode-lean4-extra.textToList', async () => {
+		const editor = window.activeTextEditor;
 		if (!editor) {
-			vscode.window.showErrorMessage('No active text editor');
+			window.showErrorMessage('No active text editor');
 			return;
 		}
 
@@ -189,11 +209,11 @@ export function activate(context: vscode.ExtensionContext) {
 		});
 	});
 
-	let autoImportCommand = vscode.commands.registerCommand('vscode-lean4-extra.autoImport', async () => {
+	let autoImportCommand = commands.registerCommand('vscode-lean4-extra.autoImport', async () => {
 		await getImportFilename()
 	});
 
-	let debugCommand = vscode.commands.registerCommand('vscode-lean4-extra.doDebug', async () => {
+	let debugCommand = commands.registerCommand('vscode-lean4-extra.doDebug', async () => {
 		// await getImportFilename()
 	});
 
@@ -220,17 +240,17 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	const getClipboardImportShorthand = async () => {
-		const text = await vscode.env.clipboard.readText()
+		const text = await env.clipboard.readText()
 		try {
 			const result = path.parse(text)
 			const leanPath = getLeanNamesFromParsedPath(result)
 			return `import ${getLeanPathFromLeanNames(leanPath)}`
 		} catch (e) {
 			if (e instanceof Error) {
-				vscode.window.showErrorMessage(e.toString());
-				// vscode.window.showErrorMessage('The clipboard does not contain a valid filesystem path');
+				window.showErrorMessage(e.toString());
+				// window.showErrorMessage('The clipboard does not contain a valid filesystem path');
 			} else {
-				vscode.window.showErrorMessage('Unknown error occurred');
+				window.showErrorMessage('Unknown error occurred');
 			}
 			return;
 		}
@@ -241,7 +261,7 @@ export function activate(context: vscode.ExtensionContext) {
 		if (!namespaces) return;
 		const typeName = namespaces.pop()
 		if (!typeName) {
-			vscode.window.showErrorMessage('Could not find a type name');
+			window.showErrorMessage('Could not find a type name');
 			return;
 		}
 		const varName = getShortNameFromType(typeName)
@@ -296,31 +316,31 @@ export function activate(context: vscode.ExtensionContext) {
 	const combineAll = joinAll(2)
 	const joinAllSegments = (segmentsArray: Segment[][]) => joinAll(2)(segmentsArray.flat())
 
-	const getCompletionItem = (label: string | vscode.CompletionItemLabel, kind?: vscode.CompletionItemKind) => (props: Partial<vscode.CompletionItem>) => {
-		const item = new vscode.CompletionItem(label, kind)
+	const getCompletionItem = (label: string | CompletionItemLabel, kind?: CompletionItemKind) => (props: Partial<CompletionItem>) => {
+		const item = new CompletionItem(label, kind)
 		return Object.assign(item, props)
 	}
 
-	const getCompletionItemInsertText = (label: string | vscode.CompletionItemLabel, kind?: vscode.CompletionItemKind) => (insertText: string) => getCompletionItem(label, kind)({ insertText })
+	const getCompletionItemInsertText = (label: string | CompletionItemLabel, kind?: CompletionItemKind) => (insertText: string) => getCompletionItem(label, kind)({ insertText })
 
-	const getCompletionItemInsertTextSimple = (label: string | vscode.CompletionItemLabel, insertText: string) => getCompletionItem(label)({ insertText })
+	const getCompletionItemInsertTextSimple = (label: string | CompletionItemLabel, insertText: string) => getCompletionItem(label)({ insertText })
 	const getCompletionItemITS = getCompletionItemInsertTextSimple
 
-	const completions = vscode.languages.registerCompletionItemProvider(
+	const completions = languages.registerCompletionItemProvider(
 		{
 			scheme: 'file',
 		},
 		{
-			async provideCompletionItems(document: vscode.TextDocument, position: vscode.Position) {
-				const gen = new vscode.CompletionItem('gen')
+			async provideCompletionItems(document: TextDocument, position: Position) {
+				const gen = new CompletionItem('gen')
 				gen.insertText = joinAllSegments([getGenericImports()])
-				const ns = new vscode.CompletionItem('ns')
+				const ns = new CompletionItem('ns')
 				ns.insertText = joinAllSegments([getNamespacesSegments(document.fileName)])
-				const nsgen = new vscode.CompletionItem('nsgen')
+				const nsgen = new CompletionItem('nsgen')
 				nsgen.insertText = joinAllSegments([getGenericImports(), getNamespacesSegments(document.fileName)])
-				const imp = new vscode.CompletionItem('imp')
+				const imp = new CompletionItem('imp')
 				imp.insertText = getImportShorthand(document.fileName)
-				const cimp = new vscode.CompletionItem('cimp')
+				const cimp = new CompletionItem('cimp')
 				cimp.insertText = await getClipboardImportShorthand()
 				const variable = getCompletionItem('var')({
 					insertText: getVariableShorthand(document.fileName)
@@ -352,3 +372,38 @@ export function activate(context: vscode.ExtensionContext) {
 
 // This method is called when your extension is deactivated
 export function deactivate() { }
+
+function getLeanImportPathFromAbsoluteFilePath(workspaceFolder: string, path: string) {
+	return path.replace(workspaceFolder + sep, '').replace(new RegExp(sep, 'g'), '.').replace('.lean', '')
+}
+
+function getImportInsertPosition(editor: TextEditor) {
+	const { selection, document } = editor
+	const { start } = selection
+	const { getText, positionAt } = document
+	const text = getText()
+	// // WARNING: The next line may result in the incorrect position being returned if the file contains `import` in some other location (not an import statement)
+	// // TODO: Rewrite this hack
+	const matches = text.matchAll(/^import\s/gm)
+	const match = lastOfIterator(1024)(matches)
+	const importOffset = match && match.index
+	if (importOffset) {
+		const importPosition = positionAt(importOffset)
+		const nextLine = importPosition.line + 1;
+		return new Position(nextLine, 0)
+	} else {
+		return new Position(0, 0)
+	}
+}
+
+const lastOfIterator = (max: number = 1024) => <T>(iterator: IterableIterator<T>) => {
+	let result: T | undefined = undefined
+	let i = 0
+	for (let item of iterator) {
+		result = item
+		i++;
+		if (i >= max) return undefined
+	}
+	return result
+};
+
