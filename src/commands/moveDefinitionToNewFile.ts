@@ -1,80 +1,68 @@
-import { sortBy } from 'lodash';
-import { longestCommonPrefix } from '../utils/string';
-import { Exports } from 'lean4/src/exports';
-import { WorkspaceSymbol } from 'vscode-languageserver-types';
-import { QuickPickItem, extensions, window } from 'vscode';
-import { getImportInsertPosition, getSelectionText } from '../utils/TextEditor';
-import { getLeanImportPathFromAbsoluteFilePath } from '../utils/path';
+import { identity } from 'lodash';
+import { sep } from 'path';
+import { Uri, commands, window, workspace } from 'vscode';
+import { deleteSelection, getSelectionText } from '../utils/TextEditor';
+import { doWriteFile } from '../utils/file';
+import { ensureNames, toNamespace } from '../utils/lean';
+import { Line, Segment, combineAll } from '../utils/text';
+
+const getMatchesStartingWith = (start: string) => (text: string) => {
+  return text.match(new RegExp("^" + start + '.*', 'gm'))
+};
+
+const getImports = getMatchesStartingWith('import')
+const getOpens = getMatchesStartingWith('open');
 
 export async function moveDefinitionToNewFile() {
-  // const editor = window.activeTextEditor;
-  // if (!editor) {
-  //   window.showErrorMessage('No active editor found');
-  //   return;
-  // }
-  // // console.log('>>> getImportFilename')
-  // const leanExtensionId = 'leanprover.lean4';
-  // const leanExtension = extensions.getExtension(leanExtensionId);
-  // if (!leanExtension) {
-  //   window.showErrorMessage(`${leanExtensionId} extension is not available`);
-  //   return;
-  // }
-  // const { clientProvider } = leanExtension.exports as Exports;
-  // if (!clientProvider) {
-  //   window.showErrorMessage(`${leanExtensionId} extension.clientProvider is not available`);
-  //   return;
-  // }
-  // const client = clientProvider.getActiveClient();
-  // if (!client) {
-  //   window.showErrorMessage(`${leanExtensionId} extension.clientProvider.getActiveClient() is not available`);
-  //   return;
-  // }
-  // const workspaceFolder = client.getWorkspaceFolder();
-  // const query = getSelectionText(editor);
-  // if (!query) {
-  //   window.showWarningMessage(`Text selection is empty: please select the name for auto-import in the editor`);
-  //   return;
-  // }
-  // const symbols: WorkspaceSymbol[] | null = await client.sendRequest('workspace/symbol', {
-  //   query
-  // }).catch((e) => {
-  //   if (e instanceof Error) {
-  //     window.showErrorMessage(e.toString());
-  //     return;
-  //   } else {
-  //     window.showErrorMessage(`Unknown error occurred while sending a request to LSP: ${e}`);
-  //     return;
-  //   }
-  // });
-  // if (!symbols) {
-  //   window.showErrorMessage(`Received a null response from LSP`);
-  //   return;
-  // }
-  // const currentPath = getLeanImportPathFromAbsoluteFilePath(workspaceFolder, editor.document.fileName);
-  // const symbolsAnchored = symbols.filter(({ name }) => name.endsWith(query));
-  // const infosRaw = symbolsAnchored.map(({ name, location }) => {
-  //   const path = getLeanImportPathFromAbsoluteFilePath(workspaceFolder, location.uri);
-  //   return ({
-  //     name,
-  //     path,
-  //     closeness: longestCommonPrefix([currentPath, path]).length
-  //   });
-  // });
-  // const infos = sortBy(infosRaw, i => -i.closeness /* most close first */);
-  // const items: QuickPickItem[] = infos.map((symbol, index) => ({
-  //   label: symbol.name,
-  //   description: symbol.path,
-  //   picked: index === 0
-  // }));
-  // const result = await window.showQuickPick(items, {
-  //   placeHolder: 'Pick a symbol',
-  //   matchOnDescription: true
-  // });
-  // if (!result) return;
-  // if (!result.description) throw new Error('Result must have a description');
-  // const leanImportPath = result.description;
-  // const insertPosition = getImportInsertPosition(editor);
-  // editor.edit(editBuilder => {
-  //   editBuilder.insert(insertPosition, `import ${leanImportPath}\n`);
-  // });
+  const { activeTextEditor: editor } = window;
+  const { fs } = workspace
+  if (!editor) {
+    window.showErrorMessage('No active editor found');
+    return;
+  }
+  const { document } = editor
+  const text = document.getText()
+  const allImports = getImports(text) || []
+  const allOpens = getOpens(text) || []
+  const selection = getSelectionText(editor)
+  const currentNamespaces = ensureNames(document.fileName).slice(0, -1)
+  const selectionNamespaces = getSelectionNamespaces(selection)
+  const filePath = getFilePath(editor.document.uri, currentNamespaces.concat(selectionNamespaces))
+  const content = getContent(allImports, allOpens)(selection)(currentNamespaces, selectionNamespaces)
+  await doWriteFile(filePath, content);
+  await deleteSelection(editor)
+  await commands.executeCommand('vscode.open', Uri.file(filePath));
 }
+
+function getFilePath(uri: Uri, names: string[]): any {
+  const workspaceFolder = workspace.getWorkspaceFolder(uri)
+  if (!workspaceFolder) throw new Error(`Cannot get a workspace folder for the file uri: "${uri}"`)
+  return workspaceFolder.uri.fsPath + sep + names.join(sep) + '.lean'
+}
+
+const getSelectionNamespaces = (selection: string) => {
+  // TODO: Rewrite this hack
+  const namespacesRaw = getSecondStringWithoutSpaces(selection)
+  if (!namespacesRaw) throw new Error('Selection is invalid: it does not contain any Lean names')
+  return namespacesRaw.split('.')
+};
+
+const getContent = (allImports: Line[], allOpens: Line[]) => (selection: string) => (globalNames: string[], localNames: string[]) => {
+  // const filePath = uri.toString();
+  const segments: Segment[] = []
+  segments.push(allImports)
+  segments.push(allOpens)
+  segments.push([toNamespace(globalNames)])
+  segments.push([selection.trim()])
+  segments.push([toNamespace(localNames)])
+  return combineAll(segments)
+};
+
+function getSecondStringWithoutSpaces(selection: string) {
+  return selection
+    .split(' ')
+    .map(s => s.trim())
+    .filter(identity)
+    .at(1);
+}
+

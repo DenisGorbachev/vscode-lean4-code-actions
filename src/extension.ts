@@ -6,7 +6,7 @@ import { kebabCase } from 'lodash';
 import { CompletionItem, CompletionItemKind, CompletionItemLabel, ExtensionContext, Position, TextDocument, commands, env, languages, window } from 'vscode';
 import { autoImport } from './commands/autoImport';
 import { joinAllSegments } from './utils/text';
-import { getNamespaces, getNamespacesSegments } from './utils/lean';
+import { getNames, getNamespacesSegments } from './utils/lean';
 import { insertNamespaces } from './commands/insertNamespaces';
 import { moveDefinitionToNewFile } from './commands/moveDefinitionToNewFile';
 import { createFreewriteFile } from './commands/createFreewriteFile';
@@ -30,7 +30,7 @@ export function activate(context: ExtensionContext) {
 	// }
 
 	const getImportShorthand = (currentFilePath: string) => {
-		const namespaces = getNamespaces(currentFilePath)
+		const namespaces = getNames(currentFilePath)
 		if (!namespaces) return;
 		return `import ${namespaces.join('.')}`
 	}
@@ -63,7 +63,7 @@ export function activate(context: ExtensionContext) {
 	}
 
 	const getVariableShorthand = (currentFilePath: string) => {
-		const namespaces = getNamespaces(currentFilePath)
+		const namespaces = getNames(currentFilePath)
 		if (!namespaces) return;
 		const typeName = namespaces.pop()
 		if (!typeName) {

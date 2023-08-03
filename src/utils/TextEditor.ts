@@ -1,5 +1,5 @@
+import { Position } from 'vscode';
 import { TextEditor } from "../vscode";
-import { Position, TextEditor } from 'vscode';
 import { lastOfIterator } from './IterableIterator';
 
 export function getImportInsertPosition(editor: TextEditor) {
@@ -26,3 +26,7 @@ export const getSelectionText = (editor: TextEditor) => {
   // return editor.document.getText(wordRange)
   return editor.document.getText(editor.selection)
 };
+
+export async function deleteSelection(editor: TextEditor) {
+  await editor.edit(builder => builder.delete(editor.selection));
+}
