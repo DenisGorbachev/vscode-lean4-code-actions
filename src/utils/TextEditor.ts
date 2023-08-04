@@ -1,5 +1,4 @@
-import { Position } from 'vscode';
-import { TextEditor } from "../vscode";
+import { Position, TextEditor, window } from 'vscode';
 import { lastOfIterator } from './IterableIterator';
 
 export function getImportInsertPosition(editor: TextEditor) {
@@ -30,3 +29,9 @@ export const getSelectionText = (editor: TextEditor) => {
 export async function deleteSelection(editor: TextEditor) {
   await editor.edit(builder => builder.delete(editor.selection));
 }
+
+export const ensureEditor = () => {
+  const { activeTextEditor } = window;
+  if (!activeTextEditor) throw new Error('No active editor found');
+  return activeTextEditor
+};

@@ -1,15 +1,23 @@
 {
-  "name": "vscode-lean4-extra",
-  "displayName": "Lean 4 Extra",
-  "description": "Additional utilities for Lean 4 development",
-  "version": "0.0.1",
+  "name": "vscode-lean4-code-actions",
+  "displayName": "Lean 4 Code Actions",
+  "description": "Refactorings and snippets for Lean 4",
+  "version": "1.0.0",
   "license": "MIT",
   "publisher": "dengorbachev",
   "engines": {
     "vscode": "^1.78.0"
   },
   "categories": [
+    "Snippets",
+    "Formatters",
     "Other"
+  ],
+  "keywords": [
+    "Refactor",
+    "Rename",
+    "Move",
+    "Snippet"
   ],
   "activationEvents": [
     "onLanguage:lean4"
@@ -18,24 +26,21 @@
   "contributes": {
     "commands": [
       {
-        "command": "vscode-lean4-extra.autoImport",
-        "title": "Lean 4 Extra: Auto-import the definition under cursor",
-        "shortTitle": "Lean 4 Extra: Auto-import"
+        "command": "vscode-lean4-code-actions.autoImport",
+        "title": "Lean 4: Auto-import the definition under cursor",
+        "shortTitle": "Lean 4: Auto-import"
       },
       {
-        "command": "vscode-lean4-extra.moveDefinitionToNewFile",
-        "title": "Lean 4 Extra: Move definition to a new file"
+        "command": "vscode-lean4-code-actions.moveDefinitionToNewFile",
+        "title": "Lean 4: Move definition to a new file",
+        "shortTitle": "Lean 4: Move definition"
       },
       {
-        "command": "vscode-lean4-extra.insertNamespaces",
-        "title": "Lean 4 Extra: Insert namespaces"
+        "command": "vscode-lean4-code-actions.createFreewriteFile",
+        "title": "Lean 4: Create a freewrite file"
       },
       {
-        "command": "vscode-lean4-extra.createFreewriteFile",
-        "title": "Lean 4 Extra: Create a freewrite file"
-      },
-      {
-        "command": "vscode-lean4-extra.convertTextToList",
+        "command": "vscode-lean4-code-actions.convertTextToList",
         "title": "Lean 4 Extra: Convert a text to list line-by-line"
       }
     ],

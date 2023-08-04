@@ -1,5 +1,5 @@
-import { writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
+import { writeFile } from 'fs/promises';
 import { Uri, commands, window, workspace } from 'vscode';
 import { nail } from '../utils/string';
 
@@ -42,7 +42,7 @@ const getFreewriteFileContent = (namespace: string) => {
 		def thoughts : Thoughts := []
 
 		def wishes : Thoughts := []
-	`)
+	`).trim()
 }
 
 export const getFreewriteNamespace = (now: Date) => 'on_' + now.toISOString().slice(0, 10).replace(/-/g, '_');

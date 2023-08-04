@@ -1,28 +1,28 @@
 // Import the module and reference it with the alias vscode in your code below
 // import * as vscode from 'vscode';
+import { kebabCase } from 'lodash';
 import * as path from 'path';
 import { identity, last } from 'remeda';
-import { kebabCase } from 'lodash';
 import { CompletionItem, CompletionItemKind, CompletionItemLabel, ExtensionContext, Position, TextDocument, commands, env, languages, window } from 'vscode';
 import { autoImport } from './commands/autoImport';
-import { joinAllSegments } from './utils/text';
-import { getNames, getNamespacesSegments } from './utils/lean';
-import { insertNamespaces } from './commands/insertNamespaces';
-import { moveDefinitionToNewFile } from './commands/moveDefinitionToNewFile';
-import { createFreewriteFile } from './commands/createFreewriteFile';
 import { convertTextToList } from './commands/convertTextToList';
+import { createFreewriteFile } from './commands/createFreewriteFile';
+import { moveDefinitionToNewFile } from './commands/moveDefinitionToNewFile';
+import { provideRenameEdits, renameLocalVariable } from './commands/renameLocalVariable';
+import { getNames, getNamespacesSegments } from './utils/lean';
+import { joinAllSegments } from './utils/text';
 
 export function activate(context: ExtensionContext) {
 
-	const insertNamespacesCommand = commands.registerCommand('vscode-lean4-extra.insertNamespaces', insertNamespaces);
+	const createFreewriteFileCommand = commands.registerCommand('vscode-lean4-code-actions.createFreewriteFile', createFreewriteFile);
 
-	const createFreewriteFileCommand = commands.registerCommand('vscode-lean4-extra.createFreewriteFile', createFreewriteFile);
+	const convertTextToListCommand = commands.registerCommand('vscode-lean4-code-actions.convertTextToList', convertTextToList);
 
-	const convertTextToListCommand = commands.registerCommand('vscode-lean4-extra.convertTextToList', convertTextToList);
+	const autoImportCommand = commands.registerCommand('vscode-lean4-code-actions.autoImport', autoImport);
 
-	const autoImportCommand = commands.registerCommand('vscode-lean4-extra.autoImport', autoImport);
+	const moveDefinitionToNewFileCommand = commands.registerCommand('vscode-lean4-code-actions.moveDefinitionToNewFile', moveDefinitionToNewFile);
 
-	const moveDefinitionToNewFileCommand = commands.registerCommand('vscode-lean4-extra.moveDefinitionToNewFile', moveDefinitionToNewFile);
+	const renameLocalVariableCommand = commands.registerCommand('vscode-lean4-code-actions.renameLocalVariable', renameLocalVariable);
 
 	// const getInductiveSegments = (name: string | undefined) => {
 
@@ -161,12 +161,15 @@ export function activate(context: ExtensionContext) {
 		},
 	);
 
-	context.subscriptions.push(insertNamespacesCommand);
 	context.subscriptions.push(createFreewriteFileCommand);
 	context.subscriptions.push(convertTextToListCommand);
 	context.subscriptions.push(autoImportCommand);
 	context.subscriptions.push(moveDefinitionToNewFileCommand);
+	context.subscriptions.push(renameLocalVariableCommand);
 	context.subscriptions.push(completions);
+	languages.registerRenameProvider({ language: 'lean4' }, {
+		provideRenameEdits
+	})
 }
 
 // This method is called when your extension is deactivated

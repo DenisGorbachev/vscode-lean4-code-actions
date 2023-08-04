@@ -1,7 +1,7 @@
 import { identity } from 'lodash';
 import { sep } from 'path';
-import { Uri, commands, window, workspace } from 'vscode';
-import { deleteSelection, getSelectionText } from '../utils/TextEditor';
+import { Uri, commands, workspace } from 'vscode';
+import { deleteSelection, ensureEditor, getSelectionText } from '../utils/TextEditor';
 import { doWriteFile } from '../utils/file';
 import { ensureNames, toNamespace } from '../utils/lean';
 import { Line, Segment, combineAll } from '../utils/text';
@@ -14,12 +14,7 @@ const getImports = getMatchesStartingWith('import')
 const getOpens = getMatchesStartingWith('open');
 
 export async function moveDefinitionToNewFile() {
-  const { activeTextEditor: editor } = window;
-  const { fs } = workspace
-  if (!editor) {
-    window.showErrorMessage('No active editor found');
-    return;
-  }
+  const editor = ensureEditor()
   const { document } = editor
   const text = document.getText()
   const allImports = getImports(text) || []
@@ -27,7 +22,7 @@ export async function moveDefinitionToNewFile() {
   const selection = getSelectionText(editor)
   const currentNamespaces = ensureNames(document.fileName).slice(0, -1)
   const selectionNamespaces = getSelectionNamespaces(selection)
-  const filePath = getFilePath(editor.document.uri, currentNamespaces.concat(selectionNamespaces))
+  const filePath = getFilePath(document.uri, currentNamespaces.concat(selectionNamespaces))
   const content = getContent(allImports, allOpens)(selection)(currentNamespaces, selectionNamespaces)
   await doWriteFile(filePath, content);
   await deleteSelection(editor)

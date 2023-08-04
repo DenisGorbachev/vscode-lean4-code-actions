@@ -1,6 +1,4 @@
-# vscode-lean4-extra README
-
-This is the README for your extension "vscode-lean4-extra". After writing up a brief description, we recommend including the following sections.
+# VSCode Lean 4 Code Actions
 
 ## Features
 
