@@ -1,17 +1,17 @@
-import { Mode, ObjectEncodingOptions, OpenMode, PathLike } from 'fs';
-import { access, mkdir, writeFile } from 'fs/promises';
-import { Abortable } from 'node:events';
-import { Stream } from 'node:stream';
-import * as path from 'path';
-import { dirname } from 'path';
+import { Mode, ObjectEncodingOptions, OpenMode, PathLike } from 'fs'
+import { access, mkdir, writeFile } from 'fs/promises'
+import { Abortable } from 'node:events'
+import { Stream } from 'node:stream'
+import * as path from 'path'
+import { dirname } from 'path'
 
 export function stripExtension(filename: string) {
-  const parsed = path.parse(filename);
-  return path.join(parsed.dir, parsed.name);
+  const parsed = path.parse(filename)
+  return path.join(parsed.dir, parsed.name)
 }
 
 export async function exists(filePath: PathLike) {
-  return access(filePath).then(() => true, () => false);
+  return access(filePath).then(() => true, () => false)
 }
 
 export async function doWriteFile(
@@ -27,7 +27,7 @@ export async function doWriteFile(
     | BufferEncoding
     | null
 ) {
-  const dirPath = dirname(filePath);
-  if (!(await exists(dirPath))) await mkdir(dirPath, { recursive: true });
+  const dirPath = dirname(filePath)
+  if (!(await exists(dirPath))) {await mkdir(dirPath, { recursive: true })}
   await writeFile(filePath, content, options)
 }

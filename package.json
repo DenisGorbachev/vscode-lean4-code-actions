@@ -5,6 +5,10 @@
   "version": "1.0.0",
   "license": "MIT",
   "publisher": "dengorbachev",
+  "repository": {
+    "type": "github",
+    "url": "https://github.com/DenisGorbachev/vscode-lean4-code-actions"
+  },
   "engines": {
     "vscode": "^1.78.0"
   },
@@ -52,22 +56,29 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "yarn run compile",
-    "compile": "tsc -p ./",
+    "vscode:prepublish": "yarn run esbuild-base --minify",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
+    "esbuild": "yarn run esbuild-base --sourcemap",
+    "esbuild-watch": "yarn run esbuild-base --sourcemap --watch",
+    "compile": "tsc -p ./ || echo 'Errors ignored due to compilation errors in vscode-lean4 - our dependency'",
     "watch": "tsc -watch -p ./",
     "pretest": "yarn run compile && yarn run lint",
-    "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "lint": "eslint src --fix --ext ts --ignore-path .gitignore --max-warnings=0",
+    "test": "node ./out/test/runTest.js",
+    "package": "mkdir -p dist && vsce package -o dist/extension.vsix --yarn",
+    "deploy:local": "yarn package && code --install-extension dist/extension.vsix --force"
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",
     "@types/lodash": "^4.14.195",
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
+    "@types/voca": "^1.4.2",
     "@types/vscode": "^1.78.0",
     "@typescript-eslint/eslint-plugin": "^6.2.1",
     "@typescript-eslint/parser": "^6.2.1",
     "@vscode/test-electron": "^2.3.0",
+    "esbuild": "^0.18.17",
     "eslint": "^8.39.0",
     "glob": "^8.1.0",
     "mocha": "^10.2.0",
@@ -75,8 +86,8 @@
   },
   "dependencies": {
     "lean4": "https://gitpkg.now.sh/leanprover/vscode-lean4/vscode-lean4",
-    "lodash": "^4.17.21",
-    "remeda": "^1.14.0"
+    "remeda": "^1.14.0",
+    "voca": "^1.4.1"
   },
   "extensionDependencies": [
     "leanprover.lean4"

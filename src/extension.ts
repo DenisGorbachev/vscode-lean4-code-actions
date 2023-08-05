@@ -1,37 +1,37 @@
 // Import the module and reference it with the alias vscode in your code below
 // import * as vscode from 'vscode';
-import { kebabCase } from 'lodash';
-import * as path from 'path';
-import { identity, last } from 'remeda';
-import { CompletionItem, CompletionItemKind, CompletionItemLabel, ExtensionContext, Position, TextDocument, commands, env, languages, window } from 'vscode';
-import { autoImport } from './commands/autoImport';
-import { convertTextToList } from './commands/convertTextToList';
-import { createFreewriteFile } from './commands/createFreewriteFile';
-import { moveDefinitionToNewFile } from './commands/moveDefinitionToNewFile';
-import { provideRenameEdits, renameLocalVariable } from './commands/renameLocalVariable';
-import { getNames, getNamespacesSegments } from './utils/lean';
-import { joinAllSegments } from './utils/text';
+import * as path from 'path'
+import { identity, last } from 'remeda'
+import { kebabCase } from 'voca'
+import { CompletionItem, CompletionItemKind, CompletionItemLabel, ExtensionContext, Position, TextDocument, Uri, commands, env, languages, window } from 'vscode'
+import { autoImport } from './commands/autoImport'
+import { convertTextToList } from './commands/convertTextToList'
+import { createFreewriteFile } from './commands/createFreewriteFile'
+import { moveDefinitionToNewFile } from './commands/moveDefinitionToNewFile'
+import { provideRenameEdits, renameLocalVariable } from './commands/renameLocalVariable'
+import { getNames, getNamespacesSegments } from './utils/lean'
+import { joinAllSegments } from './utils/text'
 
 export function activate(context: ExtensionContext) {
 
-	const createFreewriteFileCommand = commands.registerCommand('vscode-lean4-code-actions.createFreewriteFile', createFreewriteFile);
+	const createFreewriteFileCommand = commands.registerCommand('vscode-lean4-code-actions.createFreewriteFile', createFreewriteFile)
 
-	const convertTextToListCommand = commands.registerCommand('vscode-lean4-code-actions.convertTextToList', convertTextToList);
+	const convertTextToListCommand = commands.registerCommand('vscode-lean4-code-actions.convertTextToList', convertTextToList)
 
-	const autoImportCommand = commands.registerCommand('vscode-lean4-code-actions.autoImport', autoImport);
+	const autoImportCommand = commands.registerCommand('vscode-lean4-code-actions.autoImport', autoImport)
 
-	const moveDefinitionToNewFileCommand = commands.registerCommand('vscode-lean4-code-actions.moveDefinitionToNewFile', moveDefinitionToNewFile);
+	const moveDefinitionToNewFileCommand = commands.registerCommand('vscode-lean4-code-actions.moveDefinitionToNewFile', moveDefinitionToNewFile)
 
-	const renameLocalVariableCommand = commands.registerCommand('vscode-lean4-code-actions.renameLocalVariable', renameLocalVariable);
+	const renameLocalVariableCommand = commands.registerCommand('vscode-lean4-code-actions.renameLocalVariable', renameLocalVariable)
 
 	// const getInductiveSegments = (name: string | undefined) => {
 
 	// 	return `import ${namespaces.join('.')}`
 	// }
 
-	const getImportShorthand = (currentFilePath: string) => {
-		const namespaces = getNames(currentFilePath)
-		if (!namespaces) return;
+	const getImportShorthand = (uri: Uri) => {
+		const namespaces = getNames(uri)
+		if (!namespaces) {return}
 		return `import ${namespaces.join('.')}`
 	}
 
@@ -53,22 +53,22 @@ export function activate(context: ExtensionContext) {
 			return `import ${getLeanPathFromLeanNames(leanPath)}`
 		} catch (e) {
 			if (e instanceof Error) {
-				window.showErrorMessage(e.toString());
+				window.showErrorMessage(e.toString())
 				// window.showErrorMessage('The clipboard does not contain a valid filesystem path');
 			} else {
-				window.showErrorMessage('Unknown error occurred');
+				window.showErrorMessage('Unknown error occurred')
 			}
-			return;
+			return
 		}
 	}
 
-	const getVariableShorthand = (currentFilePath: string) => {
-		const namespaces = getNames(currentFilePath)
-		if (!namespaces) return;
+	const getVariableShorthand = (uri: Uri) => {
+		const namespaces = getNames(uri)
+		if (!namespaces) {return}
 		const typeName = namespaces.pop()
 		if (!typeName) {
-			window.showErrorMessage('Could not find a type name');
-			return;
+			window.showErrorMessage('Could not find a type name')
+			return
 		}
 		const varName = getShortNameFromType(typeName)
 		return `variable (${varName} : ${typeName})`
@@ -92,7 +92,7 @@ export function activate(context: ExtensionContext) {
 			const restOfWord = input.slice(1)
 			return firstLetter + restOfWord
 		}
-	};
+	}
 
 	const getOneLetterNameFromType = (typeName: string) => {
 		return typeName.charAt(0).toLowerCase()
@@ -100,7 +100,7 @@ export function activate(context: ExtensionContext) {
 
 	const getCommonOpenNamespaces = () => ['Playbook', 'Std', 'Generic']
 
-	const getOpenCommand = () => `open ${getCommonOpenNamespaces().join(' ')}`;
+	const getOpenCommand = () => `open ${getCommonOpenNamespaces().join(' ')}`
 
 	const getGenericImports = () => {
 		return [
@@ -111,7 +111,7 @@ export function activate(context: ExtensionContext) {
 			[
 				getOpenCommand(),
 			]
-		];
+		]
 	}
 
 
@@ -134,15 +134,15 @@ export function activate(context: ExtensionContext) {
 				const gen = new CompletionItem('gen')
 				gen.insertText = joinAllSegments([getGenericImports()])
 				const ns = new CompletionItem('ns')
-				ns.insertText = joinAllSegments([getNamespacesSegments(document.fileName)])
+				ns.insertText = joinAllSegments([getNamespacesSegments(document.uri)])
 				const nsgen = new CompletionItem('nsgen')
-				nsgen.insertText = joinAllSegments([getGenericImports(), getNamespacesSegments(document.fileName)])
+				nsgen.insertText = joinAllSegments([getGenericImports(), getNamespacesSegments(document.uri)])
 				const imp = new CompletionItem('imp')
-				imp.insertText = getImportShorthand(document.fileName)
+				imp.insertText = getImportShorthand(document.uri)
 				const cimp = new CompletionItem('cimp')
 				cimp.insertText = await getClipboardImportShorthand()
 				const variable = getCompletionItem('var')({
-					insertText: getVariableShorthand(document.fileName)
+					insertText: getVariableShorthand(document.uri)
 				})
 				const open = getCompletionItemITS('open', getOpenCommand())
 				return [
@@ -156,17 +156,17 @@ export function activate(context: ExtensionContext) {
 					// getCompletionItem('ind')({
 					// 	insertText: joinAllSegments([getInductiveSegments()])
 					// })
-				];
+				]
 			},
 		},
-	);
+	)
 
-	context.subscriptions.push(createFreewriteFileCommand);
-	context.subscriptions.push(convertTextToListCommand);
-	context.subscriptions.push(autoImportCommand);
-	context.subscriptions.push(moveDefinitionToNewFileCommand);
-	context.subscriptions.push(renameLocalVariableCommand);
-	context.subscriptions.push(completions);
+	context.subscriptions.push(createFreewriteFileCommand)
+	context.subscriptions.push(convertTextToListCommand)
+	context.subscriptions.push(autoImportCommand)
+	context.subscriptions.push(moveDefinitionToNewFileCommand)
+	context.subscriptions.push(renameLocalVariableCommand)
+	context.subscriptions.push(completions)
 	languages.registerRenameProvider({ language: 'lean4' }, {
 		provideRenameEdits
 	})

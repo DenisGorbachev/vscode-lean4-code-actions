@@ -1,41 +1,44 @@
-import * as path from 'path';
-import { Uri, workspace } from 'vscode';
-import { Segment } from './text';
+import * as path from 'path'
+import { Uri, workspace } from 'vscode'
+import { Segment } from './text'
 
-export const getNames = (filePath: string) => {
-  const workspaceFolder = workspace.getWorkspaceFolder(Uri.file(filePath));
-  if (!workspaceFolder) throw new Error(`Cannot get a workspace folder for file path: "${filePath}"`);
+export const getNames = (uri: Uri) => {
+  const workspaceFolder = workspace.getWorkspaceFolder(uri)
+  if (!workspaceFolder) { throw new Error(`Cannot get a workspace folder for uri: "${uri}"`) }
 
-  const workspaceFolderPath = workspaceFolder.uri.fsPath;
-  const relativeFilePath = path.parse(path.relative(workspaceFolderPath, filePath));
+  const workspaceFolderPath = workspaceFolder.uri.fsPath
+  const relativeFilePath = path.parse(path.relative(workspaceFolderPath, uri.fsPath))
 
-  const names = relativeFilePath.dir.split(path.sep);
-  names.push(relativeFilePath.name);
+  const names = relativeFilePath.dir.split(path.sep)
+  names.push(relativeFilePath.name)
 
-  return names.filter(ns => ns.length > 0);
-};
+  return names.filter(ns => ns.length > 0)
+}
 
-export const ensureNames = (filePath: string) => {
-  const namespaces = getNames(filePath)
-  if (!namespaces) throw new Error(`Cannot extract names from file path: "${filePath}"`)
+export const ensureNames = (uri: Uri) => {
+  const namespaces = getNames(uri)
+  if (!namespaces) { throw new Error(`Cannot extract names from uri: "${uri}"`) }
   return namespaces
-};
+}
 
-export const toNamespace = (names: string[]) => `namespace ${names.join('.')}`;
+export const toNamespace = (names: string[]) => names.join('.')
 
-export const getNamespacesSegments = (currentFilePath: string): Segment[] => {
-  const splinters = getNames(currentFilePath);
-  if (!splinters) return [];
-  const segments: Segment[] = [];
-  const childName = splinters.pop();
-  const parentNames = splinters;
+export const toNamespaceDeclaration = (names: string[]) => `namespace ${toNamespace(names)}`
+
+export const getNamespacesSegments = (uri: Uri): Segment[] => {
+  const splinters = getNames(uri)
+  if (!splinters) { return [] }
+  const segments: Segment[] = []
+  const childName = splinters.pop()
+  const parentNames = splinters
   if (parentNames.length) {
-    segments.push([toNamespace(parentNames)]);
+    segments.push([toNamespaceDeclaration(parentNames)])
   }
   if (childName) {
-    segments.push([`structure ${childName} where`, 'deriving Repr, Inhabited, BEq, DecidableEq']);
-    segments.push([toNamespace([childName])]);
+    segments.push([`structure ${childName} where`, 'deriving Repr, Inhabited, BEq, DecidableEq'])
+    segments.push([toNamespaceDeclaration([childName])])
     // segments.push(['namespace Example'])
   }
-  return segments;
-};
+  return segments
+}
+
