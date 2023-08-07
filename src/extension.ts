@@ -8,7 +8,7 @@ import { autoImport } from './commands/autoImport'
 import { convertTextToList } from './commands/convertTextToList'
 import { createFreewriteFile } from './commands/createFreewriteFile'
 import { moveDefinitionToNewFile } from './commands/moveDefinitionToNewFile'
-import { provideRenameEdits, renameLocalVariable } from './commands/renameLocalVariable'
+import { provideRenameEdits } from './commands/renameLocalVariable'
 import { getNames, getNamespacesSegments } from './utils/lean'
 import { joinAllSegments } from './utils/text'
 
@@ -22,7 +22,7 @@ export function activate(context: ExtensionContext) {
 
 	const moveDefinitionToNewFileCommand = commands.registerCommand('vscode-lean4-code-actions.moveDefinitionToNewFile', moveDefinitionToNewFile)
 
-	const renameLocalVariableCommand = commands.registerCommand('vscode-lean4-code-actions.renameLocalVariable', renameLocalVariable)
+	// const renameLocalVariableCommand = commands.registerCommand('vscode-lean4-code-actions.renameLocalVariable', renameLocalVariable)
 
 	// const getInductiveSegments = (name: string | undefined) => {
 
@@ -31,7 +31,7 @@ export function activate(context: ExtensionContext) {
 
 	const getImportShorthand = (uri: Uri) => {
 		const namespaces = getNames(uri)
-		if (!namespaces) {return}
+		if (!namespaces) { return }
 		return `import ${namespaces.join('.')}`
 	}
 
@@ -64,7 +64,7 @@ export function activate(context: ExtensionContext) {
 
 	const getVariableShorthand = (uri: Uri) => {
 		const namespaces = getNames(uri)
-		if (!namespaces) {return}
+		if (!namespaces) { return }
 		const typeName = namespaces.pop()
 		if (!typeName) {
 			window.showErrorMessage('Could not find a type name')
@@ -165,7 +165,7 @@ export function activate(context: ExtensionContext) {
 	context.subscriptions.push(convertTextToListCommand)
 	context.subscriptions.push(autoImportCommand)
 	context.subscriptions.push(moveDefinitionToNewFileCommand)
-	context.subscriptions.push(renameLocalVariableCommand)
+	// context.subscriptions.push(renameLocalVariableCommand)
 	context.subscriptions.push(completions)
 	languages.registerRenameProvider({ language: 'lean4' }, {
 		provideRenameEdits

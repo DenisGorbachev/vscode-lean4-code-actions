@@ -2,6 +2,8 @@ import * as path from 'path'
 import { Uri, workspace } from 'vscode'
 import { Segment } from './text'
 
+export const leanNameSeparator = '.'
+
 export const getNames = (uri: Uri) => {
   const workspaceFolder = workspace.getWorkspaceFolder(uri)
   if (!workspaceFolder) { throw new Error(`Cannot get a workspace folder for uri: "${uri}"`) }
@@ -21,7 +23,10 @@ export const ensureNames = (uri: Uri) => {
   return namespaces
 }
 
-export const toNamespace = (names: string[]) => names.join('.')
+
+export const toNames = (namespace: string) => namespace.split(leanNameSeparator)
+
+export const toNamespace = (names: string[]) => names.join(leanNameSeparator)
 
 export const toNamespaceDeclaration = (names: string[]) => `namespace ${toNamespace(names)}`
 

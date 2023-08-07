@@ -30,6 +30,15 @@ export const getSelectionText = (editor: TextEditor) => {
   }
 }
 
+export const getSelectedName = (editor: TextEditor) => {
+  /** TODO
+   *  * Options
+   *    * Implement a real parser for Lean name
+   *    * Get the name-under-cursor from LSP
+   */
+  return getSelectionText(editor)
+}
+
 export async function deleteSelection(editor: TextEditor) {
   await editor.edit(builder => builder.delete(editor.selection))
 }

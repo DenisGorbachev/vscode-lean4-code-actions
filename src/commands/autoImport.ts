@@ -1,12 +1,54 @@
 import { Exports } from 'lean4/src/exports'
-import { sortBy } from 'remeda'
-import { QuickPickItem, extensions, window } from 'vscode'
+import { flatten, last, sortBy } from 'remeda'
+import { Name } from 'src/models/Lean/Name'
+import { ensureWorkspaceFolder } from 'src/utils/workspace'
+import { extensions, window, workspace } from 'vscode'
 import { WorkspaceSymbol } from 'vscode-languageserver-types'
-import { ensureEditor, getImportInsertPosition, getSelectionText } from '../utils/TextEditor'
-import { getLeanImportPathFromAbsoluteFilePath } from '../utils/path'
+import { GenericQuickPickItem } from '../utils/QuickPickItem'
+import { ensureEditor, getImportInsertPosition, getSelectedName } from '../utils/TextEditor'
+import { toNames } from '../utils/lean'
+import { getLeanImportPathFromAbsoluteFilePath, getLeanImportPathFromRelativeFilePath, getRelativeFilePathFromAbsoluteFilePath } from '../utils/path'
 import { longestCommonPrefix } from '../utils/string'
 
 export async function autoImport() {
+  const editor = ensureEditor()
+  const name = getSelectedName(editor)
+  if (!name) throw new Error(`Text selection is empty: please select the name for auto-import in the editor`)
+  const itemsArray = await Promise.all([
+    getQuickPickItemsFromWorkspaceFiles(name),
+    getQuickPickItemsFromWorkspaceSymbols(name)
+  ])
+  const items = flatten(itemsArray)
+  const result = await window.showQuickPick(items, {
+    placeHolder: 'Pick a symbol',
+    matchOnDescription: true,
+  })
+  if (!result) return // user cancelled the action
+  const leanImportPath = await result.getValue()
+  const insertPosition = getImportInsertPosition(editor)
+  editor.edit(editBuilder => {
+    editBuilder.insert(insertPosition, `import ${leanImportPath}\n`)
+  })
+}
+
+async function getQuickPickItemsFromWorkspaceFiles(name: string) {
+  const names = toNames(name)
+  const lastName = last(names)
+  if (!lastName) throw new Error(`Cannot parse Lean name: "${name}"`)
+  const uris = await workspace.findFiles(`**/*${lastName}.lean`, '{build,lake-packages}')
+  return uris.map((uri, index): GenericQuickPickItem<Name> => {
+    const workspaceFolder = ensureWorkspaceFolder(uri)
+    console.log(workspaceFolder)
+    console.log(uri.fsPath)
+    return ({
+      label: '$(file) ' + getRelativeFilePathFromAbsoluteFilePath(workspaceFolder.uri.fsPath, uri.fsPath),
+      picked: index === 0,
+      getValue: async () => getLeanImportPathFromAbsoluteFilePath(workspaceFolder.uri.fsPath, uri.fsPath)
+    })
+  })
+}
+
+async function getQuickPickItemsFromWorkspaceSymbols(query: string) {
   const editor = ensureEditor()
   const leanExtensionId = 'leanprover.lean4'
   const leanExtension = extensions.getExtension(leanExtensionId)
@@ -16,8 +58,6 @@ export async function autoImport() {
   const client = clientProvider.getActiveClient()
   if (!client) throw new Error(`${leanExtensionId} extension.clientProvider.getActiveClient() is not available`)
   const workspaceFolder = client.getWorkspaceFolder()
-  const query = getSelectionText(editor)
-  if (!query) throw new Error(`Text selection is empty: please select the name for auto-import in the editor`)
   const symbols: WorkspaceSymbol[] | null = await client.sendRequest('workspace/symbol', {
     query
   }).catch((e) => {
@@ -30,31 +70,27 @@ export async function autoImport() {
     }
   })
   if (!symbols) throw new Error(`Received a null response from LSP`)
-  const currentPath = getLeanImportPathFromAbsoluteFilePath(workspaceFolder, editor.document.fileName)
+  const currentPath = getRelativeFilePathFromAbsoluteFilePath(workspaceFolder, editor.document.fileName)
   const symbolsAnchored = symbols.filter(({ name }) => name.endsWith(query))
   const infosRaw = symbolsAnchored.map(({ name, location }) => {
-    const path = getLeanImportPathFromAbsoluteFilePath(workspaceFolder, location.uri)
+    const path = getRelativeFilePathFromAbsoluteFilePath(workspaceFolder, location.uri)
     return ({
       name,
       path,
       closeness: longestCommonPrefix([currentPath, path]).length
     })
   })
-  const infos = sortBy(infosRaw, i => -i.closeness /* most close first */)
-  const items: QuickPickItem[] = infos.map((symbol, index) => ({
-    label: symbol.name,
+  const infos = sortBy(
+    infosRaw,
+    [i => i.closeness, 'desc'],
+    [i => i.name.startsWith(query), 'desc'],
+    [i => i.path, 'desc']
+  )
+  return infos.map((symbol, index): GenericQuickPickItem<Name> => ({
+    label: '$(symbol-constructor) ' + symbol.name,
     description: symbol.path,
-    picked: index === 0
+    picked: index === 0,
+    getValue: async () => getLeanImportPathFromRelativeFilePath(symbol.path)
   }))
-  const result = await window.showQuickPick(items, {
-    placeHolder: 'Pick a symbol',
-    matchOnDescription: true
-  })
-  if (!result) return
-  if (!result.description) throw new Error('Result must have a description')
-  const leanImportPath = result.description
-  const insertPosition = getImportInsertPosition(editor)
-  editor.edit(editBuilder => {
-    editBuilder.insert(insertPosition, `import ${leanImportPath}\n`)
-  })
 }
+

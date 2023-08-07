@@ -1,0 +1,9 @@
+[submodule "libs/utils"]
+	path = libs/utils
+	url = https://github.com/zenbox-org/utils.git
+[submodule "libs/generic"]
+	path = libs/generic
+	url = https://github.com/zenbox-org/generic.git
+[submodule "libs/chai"]
+	path = libs/chai
+	url = https://github.com/zenbox-org/chai.git
