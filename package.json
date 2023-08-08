@@ -26,7 +26,7 @@
   "activationEvents": [
     "onLanguage:lean4"
   ],
-  "main": "./out/extension.js",
+  "main": "./out/src/extension.js",
   "contributes": {
     "commands": [
       {
@@ -50,14 +50,12 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "yarn run esbuild-base --minify",
-    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
-    "esbuild": "yarn run esbuild-base --sourcemap",
-    "esbuild-watch": "yarn run esbuild-base --sourcemap --watch",
+    "vscode:prepublish": "yarn run esbuild --minify",
+    "esbuild": "esbuild ./src/extension.ts --bundle --outfile=./out/src/extension.js --external:vscode --format=cjs --platform=node",
+    "build": "yarn run esbuild --sourcemap",
+    "watch": "yarn run esbuild --sourcemap --watch",
     "typecheck": "tsc --noEmit",
-    "compile": "tsc -p ./ || echo 'Errors ignored due to compilation errors in vscode-lean4 - our dependency'",
-    "watch": "tsc -watch -p ./",
-    "pretest": "yarn run compile && yarn run lint",
+    "pretest": "yarn run typecheck && yarn run lint",
     "lint": "eslint src --fix --ext ts --ignore-path .gitignore --max-warnings=0",
     "test": "node ./out/test/runTest.js",
     "package": "mkdir -p dist && vsce package -o dist/extension.vsix --yarn",

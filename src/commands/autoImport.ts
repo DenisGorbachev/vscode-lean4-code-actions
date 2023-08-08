@@ -1,13 +1,13 @@
-import { Exports } from 'lean4/src/exports'
 import { flatten, last, sortBy } from 'remeda'
 import { Name } from 'src/models/Lean/Name'
+import { toNames, toNamespace } from 'src/utils/Lean'
+import { LeanExports } from 'src/utils/LeanExtension'
 import { ensureWorkspaceFolder } from 'src/utils/workspace'
 import { extensions, window, workspace } from 'vscode'
 import { WorkspaceSymbol } from 'vscode-languageserver-types'
 import { GenericQuickPickItem } from '../utils/QuickPickItem'
 import { ensureEditor, getImportInsertPosition, getSelectedName } from '../utils/TextEditor'
-import { toNames } from '../utils/lean'
-import { getLeanImportPathFromAbsoluteFilePath, getLeanImportPathFromRelativeFilePath, getRelativeFilePathFromAbsoluteFilePath } from '../utils/path'
+import { getLeanImportPathFromAbsoluteFilePath, getLeanNamesFromMaybeLakeRelativeFilePath, getRelativeFilePathFromAbsoluteFilePath } from '../utils/path'
 import { longestCommonPrefix } from '../utils/string'
 
 export async function autoImport() {
@@ -38,8 +38,6 @@ async function getQuickPickItemsFromWorkspaceFiles(name: string) {
   const uris = await workspace.findFiles(`**/*${lastName}.lean`, '{build,lake-packages}')
   return uris.map((uri, index): GenericQuickPickItem<Name> => {
     const workspaceFolder = ensureWorkspaceFolder(uri)
-    console.log(workspaceFolder)
-    console.log(uri.fsPath)
     return ({
       label: '$(file) ' + getRelativeFilePathFromAbsoluteFilePath(workspaceFolder.uri.fsPath, uri.fsPath),
       picked: index === 0,
@@ -53,11 +51,13 @@ async function getQuickPickItemsFromWorkspaceSymbols(query: string) {
   const leanExtensionId = 'leanprover.lean4'
   const leanExtension = extensions.getExtension(leanExtensionId)
   if (!leanExtension) throw new Error(`${leanExtensionId} extension is not available`)
-  const { clientProvider } = leanExtension.exports as Exports
+  const { clientProvider } = leanExtension.exports as LeanExports
   if (!clientProvider) throw new Error(`${leanExtensionId} extension.clientProvider is not available`)
   const client = clientProvider.getActiveClient()
   if (!client) throw new Error(`${leanExtensionId} extension.clientProvider.getActiveClient() is not available`)
-  const workspaceFolder = client.getWorkspaceFolder()
+  const workspaceFolder = ensureWorkspaceFolder(editor.document.uri)
+  const workspaceFolderPath = workspaceFolder.uri.fsPath
+  const workspaceFolderUriStr = workspaceFolder.uri.toString()
   const symbols: WorkspaceSymbol[] | null = await client.sendRequest('workspace/symbol', {
     query
   }).catch((e) => {
@@ -70,10 +70,10 @@ async function getQuickPickItemsFromWorkspaceSymbols(query: string) {
     }
   })
   if (!symbols) throw new Error(`Received a null response from LSP`)
-  const currentPath = getRelativeFilePathFromAbsoluteFilePath(workspaceFolder, editor.document.fileName)
+  const currentPath = getRelativeFilePathFromAbsoluteFilePath(workspaceFolderPath, editor.document.fileName)
   const symbolsAnchored = symbols.filter(({ name }) => name.endsWith(query))
   const infosRaw = symbolsAnchored.map(({ name, location }) => {
-    const path = getRelativeFilePathFromAbsoluteFilePath(workspaceFolder, location.uri)
+    const path = getRelativeFilePathFromAbsoluteFilePath(workspaceFolderUriStr, location.uri)
     return ({
       name,
       path,
@@ -84,13 +84,14 @@ async function getQuickPickItemsFromWorkspaceSymbols(query: string) {
     infosRaw,
     [i => i.closeness, 'desc'],
     [i => i.name.startsWith(query), 'desc'],
+    [i => i.name.length, 'asc'],
     [i => i.path, 'desc']
   )
   return infos.map((symbol, index): GenericQuickPickItem<Name> => ({
     label: '$(symbol-constructor) ' + symbol.name,
     description: symbol.path,
     picked: index === 0,
-    getValue: async () => getLeanImportPathFromRelativeFilePath(symbol.path)
+    getValue: async () => toNamespace(getLeanNamesFromMaybeLakeRelativeFilePath(symbol.path))
   }))
 }
 

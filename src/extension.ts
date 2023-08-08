@@ -9,7 +9,7 @@ import { convertTextToList } from './commands/convertTextToList'
 import { createFreewriteFile } from './commands/createFreewriteFile'
 import { moveDefinitionToNewFile } from './commands/moveDefinitionToNewFile'
 import { provideRenameEdits } from './commands/renameLocalVariable'
-import { getNames, getNamespacesSegments } from './utils/lean'
+import { getNames, getNamespacesSegments } from './utils/Lean'
 import { joinAllSegments } from './utils/text'
 
 export function activate(context: ExtensionContext) {
@@ -170,6 +170,7 @@ export function activate(context: ExtensionContext) {
 	languages.registerRenameProvider({ language: 'lean4' }, {
 		provideRenameEdits
 	})
+	console.log(process.version)
 }
 
 // This method is called when your extension is deactivated

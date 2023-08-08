@@ -1,11 +1,11 @@
 import { sep } from 'path'
 import { identity } from 'remeda'
 import { Uri, commands, workspace } from 'vscode'
+import { ensureNames, toNamespace, toNamespaceDeclaration } from '../utils/Lean'
 import { cloneRegExp } from '../utils/RegExp'
 import { getCurrentCodeBlockAt } from '../utils/TextDocument'
 import { ensureEditor } from '../utils/TextEditor'
 import { doWriteFile, exists } from '../utils/file'
-import { ensureNames, toNamespace, toNamespaceDeclaration } from '../utils/lean'
 import { Line, Segment, combineAll } from '../utils/text'
 
 const getMatcher = (r: RegExp) => (text: string) => text.match(r)
