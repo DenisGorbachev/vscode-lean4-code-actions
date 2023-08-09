@@ -4,6 +4,9 @@
 [submodule "libs/generic"]
 	path = libs/generic
 	url = https://github.com/zenbox-org/generic.git
+[submodule "libs/bn"]
+	path = libs/bn
+	url = https://github.com/zenbox-org/bn.git
 [submodule "libs/chai"]
 	path = libs/chai
 	url = https://github.com/zenbox-org/chai.git
