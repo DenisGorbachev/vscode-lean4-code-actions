@@ -2,6 +2,11 @@
 
 ## Features
 
+* [Auto-import a definition](#auto-import)
+* Extract definition to a separate file
+* Rename a local `let` binding (simple version)
+* Convert a text block to a list of strings (each line becomes an element of the list)
+
 <!-- Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
 
 For example if there is an image subfolder under your extension project workspace:
