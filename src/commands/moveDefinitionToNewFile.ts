@@ -1,11 +1,11 @@
 import { sep } from 'path'
 import { identity } from 'remeda'
+import { writeFileWithDirThrowIfExists } from 'src/utils/file'
 import { Uri, commands, workspace } from 'vscode'
 import { ensureNames, toNamespace, toNamespaceDeclaration } from '../utils/Lean'
 import { cloneRegExp } from '../utils/RegExp'
 import { getCurrentCodeBlockAt } from '../utils/TextDocument'
 import { ensureEditor } from '../utils/TextEditor'
-import { doWriteFile, exists } from '../utils/file'
 import { Line, Segment, combineAll } from '../utils/text'
 
 const getMatcher = (r: RegExp) => (text: string) => text.match(r)
@@ -31,10 +31,9 @@ export async function moveDefinitionToNewFile() {
   const relativeFilePath = getRelativeFilePathFromNames(fullNames)
   const absoluteFilePath = getAbsoluteFilePathFromRelativeFilePath(document.uri, relativeFilePath)
   if (absoluteFilePath === document.uri.fsPath) throw new Error(`The definition belongs to this file. See the extension docs for more details."`)
-  if (await exists(absoluteFilePath)) throw new Error(`Cannot overwrite a file that already exists: "${relativeFilePath}"`)
   // Create a new file
   const content = getContent(allImports, allOpens)(blockText)(currentNames, selectionNames)
-  await doWriteFile(absoluteFilePath, content)
+  await writeFileWithDirThrowIfExists(absoluteFilePath, content)
   // Edit the current file
   const closestImportLastIndex = getLastIndexMatchBefore(importRegExp, document.offsetAt(editor.selection.active), textAll)
   const importInsertOffset = closestImportLastIndex ? closestImportLastIndex + 1 : 0

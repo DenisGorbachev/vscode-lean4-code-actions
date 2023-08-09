@@ -14,20 +14,24 @@ export async function exists(filePath: PathLike) {
   return access(filePath).then(() => true, () => false)
 }
 
-export async function doWriteFile(
-  filePath: string,
-  content: string | NodeJS.ArrayBufferView | Iterable<string | NodeJS.ArrayBufferView> | AsyncIterable<string | NodeJS.ArrayBufferView> | Stream,
-  options?:
-    | (
-      ObjectEncodingOptions & {
-        mode?: Mode | undefined;
-        flag?: OpenMode | undefined;
-      } & Abortable
-    )
-    | BufferEncoding
-    | null
-) {
-  const dirPath = dirname(filePath)
-  if (!(await exists(dirPath))) {await mkdir(dirPath, { recursive: true })}
-  await writeFile(filePath, content, options)
+export type Content = string | NodeJS.ArrayBufferView | Iterable<string | NodeJS.ArrayBufferView> | AsyncIterable<string | NodeJS.ArrayBufferView> | Stream
+
+export type WriteFileOptions =
+  | (ObjectEncodingOptions & {
+    mode?: Mode | undefined
+    flag?: OpenMode | undefined
+  } & Abortable)
+  | BufferEncoding
+  | null
+
+export async function writeFileWithDir(filePath: string, content: Content, options?: WriteFileOptions) {
+  const dir = dirname(filePath)
+  await mkdir(dir, { recursive: true })
+  return writeFile(filePath, content, options)
+}
+
+export async function writeFileWithDirThrowIfExists(filePath: string, content: Content, options?: WriteFileOptions) {
+  const fileExists = await exists(filePath)
+  if (fileExists) throw new Error(`File ${filePath} already exists`)
+  return writeFileWithDir(filePath, content, options)
 }

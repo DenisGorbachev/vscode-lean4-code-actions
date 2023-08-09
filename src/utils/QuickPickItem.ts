@@ -1,9 +1,9 @@
-import { QuickPickItem, Uri } from 'vscode'
+import { QuickPickItem } from 'vscode'
 
 export interface GenericQuickPickItem<T> extends QuickPickItem {
   getValue: () => Promise<T>
 }
 
-export interface UriQuickPickItem extends QuickPickItem {
-  uri: Uri
+export interface StaticQuickPickItem<T> extends QuickPickItem {
+  value: T
 }
