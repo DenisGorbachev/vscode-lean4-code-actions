@@ -45,7 +45,7 @@
       },
       {
         "command": "vscode-lean4-code-actions.convertTextToList",
-        "title": "Lean 4 Extra: Convert a text to list line-by-line"
+        "title": "Lean 4: Convert a text to list line-by-line"
       }
     ]
   },
