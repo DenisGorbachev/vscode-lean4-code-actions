@@ -14,163 +14,161 @@ import { joinAllSegments } from './utils/text'
 
 export function activate(context: ExtensionContext) {
 
-	const createFreewriteFileCommand = commands.registerCommand('vscode-lean4-code-actions.createFreewriteFile', createFreewriteFile)
+  const createFreewriteFileCommand = commands.registerCommand('vscode-lean4-code-actions.createFreewriteFile', createFreewriteFile)
 
-	const convertTextToListCommand = commands.registerCommand('vscode-lean4-code-actions.convertTextToList', convertTextToList)
+  const convertTextToListCommand = commands.registerCommand('vscode-lean4-code-actions.convertTextToList', convertTextToList)
 
-	const autoImportCommand = commands.registerCommand('vscode-lean4-code-actions.autoImport', autoImport)
+  const autoImportCommand = commands.registerCommand('vscode-lean4-code-actions.autoImport', autoImport)
 
-	const moveDefinitionToNewFileCommand = commands.registerCommand('vscode-lean4-code-actions.moveDefinitionToNewFile', moveDefinitionToNewFile)
+  const moveDefinitionToNewFileCommand = commands.registerCommand('vscode-lean4-code-actions.moveDefinitionToNewFile', moveDefinitionToNewFile)
 
-	// const renameLocalVariableCommand = commands.registerCommand('vscode-lean4-code-actions.renameLocalVariable', renameLocalVariable)
+  // const renameLocalVariableCommand = commands.registerCommand('vscode-lean4-code-actions.renameLocalVariable', renameLocalVariable)
 
-	// const getInductiveSegments = (name: string | undefined) => {
+  // const getInductiveSegments = (name: string | undefined) => {
 
-	// 	return `import ${namespaces.join('.')}`
-	// }
+  // 	return `import ${namespaces.join('.')}`
+  // }
 
-	const getImportShorthand = (uri: Uri) => {
-		const namespaces = getNames(uri)
-		if (!namespaces) { return }
-		return `import ${namespaces.join('.')}`
-	}
+  const getImportShorthand = (uri: Uri) => {
+    const namespaces = getNames(uri)
+    if (!namespaces) { return }
+    return `import ${namespaces.join('.')}`
+  }
 
-	const getLeanNamesFromParsedPath = (parsedPath: path.ParsedPath) => {
-		const names = parsedPath.dir.split(path.sep)
-		names.push(parsedPath.name)
-		return names.filter(identity)
-	}
+  const getLeanNamesFromParsedPath = (parsedPath: path.ParsedPath) => {
+    const names = parsedPath.dir.split(path.sep)
+    names.push(parsedPath.name)
+    return names.filter(identity)
+  }
 
-	const getLeanPathFromLeanNames = (names: string[]) => {
-		return names.join('.')
-	}
+  const getLeanPathFromLeanNames = (names: string[]) => {
+    return names.join('.')
+  }
 
-	const getClipboardImportShorthand = async () => {
-		const text = await env.clipboard.readText()
-		try {
-			const result = path.parse(text)
-			const leanPath = getLeanNamesFromParsedPath(result)
-			return `import ${getLeanPathFromLeanNames(leanPath)}`
-		} catch (e) {
-			if (e instanceof Error) {
-				window.showErrorMessage(e.toString())
-				// window.showErrorMessage('The clipboard does not contain a valid filesystem path');
-			} else {
-				window.showErrorMessage('Unknown error occurred')
-			}
-			return
-		}
-	}
+  const getClipboardImportShorthand = async () => {
+    const text = await env.clipboard.readText()
+    try {
+      const result = path.parse(text)
+      const leanPath = getLeanNamesFromParsedPath(result)
+      return `import ${getLeanPathFromLeanNames(leanPath)}`
+    } catch (e) {
+      if (e instanceof Error) {
+        window.showErrorMessage(e.toString())
+        // window.showErrorMessage('The clipboard does not contain a valid filesystem path');
+      } else {
+        window.showErrorMessage('Unknown error occurred')
+      }
+      return
+    }
+  }
 
-	const getVariableShorthand = (uri: Uri) => {
-		const namespaces = getNames(uri)
-		if (!namespaces) { return }
-		const typeName = namespaces.pop()
-		if (!typeName) {
-			window.showErrorMessage('Could not find a type name')
-			return
-		}
-		const varName = getShortNameFromType(typeName)
-		return `variable (${varName} : ${typeName})`
-	}
+  const getVariableShorthand = (uri: Uri) => {
+    const namespaces = getNames(uri)
+    if (!namespaces) { return }
+    const typeName = namespaces.pop()
+    if (!typeName) {
+      window.showErrorMessage('Could not find a type name')
+      return
+    }
+    const varName = getShortNameFromType(typeName)
+    return `variable (${varName} : ${typeName})`
+  }
 
-	const getShortNameFromType = (typeName: string) => {
-		return last(kebabCase(typeName).split('-'))
-	}
+  const getShortNameFromType = (typeName: string) => {
+    return last(kebabCase(typeName).split('-'))
+  }
 
-	const getShortNameFromTypeSpec = ($words: [string, ...string[]]) => {
-		const words = $words.map(w => w.toLowerCase())
-		const input = words.map(w => w.toUpperCase()).join('')
-		const output = words[words.length - 1].toLowerCase()
-	}
+  const getShortNameFromTypeSpec = ($words: [string, ...string[]]) => {
+    const words = $words.map(w => w.toLowerCase())
+    const input = words.map(w => w.toUpperCase()).join('')
+    const output = words[words.length - 1].toLowerCase()
+  }
 
-	const toUpperCaseFirstLetter = (input: string) => {
-		if (input.length === 0) {
-			return input
-		} else {
-			const firstLetter = input.charAt(0).toUpperCase()
-			const restOfWord = input.slice(1)
-			return firstLetter + restOfWord
-		}
-	}
+  const toUpperCaseFirstLetter = (input: string) => {
+    if (input.length === 0) {
+      return input
+    } else {
+      const firstLetter = input.charAt(0).toUpperCase()
+      const restOfWord = input.slice(1)
+      return firstLetter + restOfWord
+    }
+  }
 
-	const getOneLetterNameFromType = (typeName: string) => {
-		return typeName.charAt(0).toLowerCase()
-	}
+  const getOneLetterNameFromType = (typeName: string) => {
+    return typeName.charAt(0).toLowerCase()
+  }
 
-	const getCommonOpenNamespaces = () => ['Playbook', 'Std', 'Generic']
+  const getCommonOpenNamespaces = () => ['Playbook', 'Std', 'Generic']
 
-	const getOpenCommand = () => `open ${getCommonOpenNamespaces().join(' ')}`
+  const getOpenCommand = () => `open ${getCommonOpenNamespaces().join(' ')}`
 
-	const getGenericImports = () => {
-		return [
-			[
-				"import Playbook.Std",
-				"import Playbook.Generic",
-			],
-			[
-				getOpenCommand(),
-			]
-		]
-	}
+  const getGenericImports = () => {
+    return [
+      [
+        'import Playbook.Std',
+        'import Playbook.Generic',
+      ],
+      [
+        getOpenCommand(),
+      ],
+    ]
+  }
 
+  const getCompletionItem = (label: string | CompletionItemLabel, kind?: CompletionItemKind) => (props: Partial<CompletionItem>) => {
+    const item = new CompletionItem(label, kind)
+    return Object.assign(item, props)
+  }
 
-	const getCompletionItem = (label: string | CompletionItemLabel, kind?: CompletionItemKind) => (props: Partial<CompletionItem>) => {
-		const item = new CompletionItem(label, kind)
-		return Object.assign(item, props)
-	}
+  const getCompletionItemInsertText = (label: string | CompletionItemLabel, kind?: CompletionItemKind) => (insertText: string) => getCompletionItem(label, kind)({ insertText })
 
-	const getCompletionItemInsertText = (label: string | CompletionItemLabel, kind?: CompletionItemKind) => (insertText: string) => getCompletionItem(label, kind)({ insertText })
+  const getCompletionItemInsertTextSimple = (label: string | CompletionItemLabel, insertText: string) => getCompletionItem(label)({ insertText })
+  const getCompletionItemITS = getCompletionItemInsertTextSimple
 
-	const getCompletionItemInsertTextSimple = (label: string | CompletionItemLabel, insertText: string) => getCompletionItem(label)({ insertText })
-	const getCompletionItemITS = getCompletionItemInsertTextSimple
+  const completions = languages.registerCompletionItemProvider(
+    {
+      scheme: 'file',
+    },
+    {
+      async provideCompletionItems(document: TextDocument, position: Position) {
+        const gen = new CompletionItem('gen')
+        gen.insertText = joinAllSegments([getGenericImports()])
+        const ns = new CompletionItem('ns')
+        ns.insertText = joinAllSegments([getNamespacesSegments(document.uri)])
+        const nsgen = new CompletionItem('nsgen')
+        nsgen.insertText = joinAllSegments([getGenericImports(), getNamespacesSegments(document.uri)])
+        const imp = new CompletionItem('imp')
+        imp.insertText = getImportShorthand(document.uri)
+        const cimp = new CompletionItem('cimp')
+        cimp.insertText = await getClipboardImportShorthand()
+        const variable = getCompletionItem('var')({
+          insertText: getVariableShorthand(document.uri),
+        })
+        const open = getCompletionItemITS('open', getOpenCommand())
+        return [
+          gen,
+          ns,
+          nsgen,
+          imp,
+          cimp,
+          variable,
+          open,
+          // getCompletionItem('ind')({
+          // 	insertText: joinAllSegments([getInductiveSegments()])
+          // })
+        ]
+      },
+    },
+  )
 
-	const completions = languages.registerCompletionItemProvider(
-		{
-			scheme: 'file',
-		},
-		{
-			async provideCompletionItems(document: TextDocument, position: Position) {
-				const gen = new CompletionItem('gen')
-				gen.insertText = joinAllSegments([getGenericImports()])
-				const ns = new CompletionItem('ns')
-				ns.insertText = joinAllSegments([getNamespacesSegments(document.uri)])
-				const nsgen = new CompletionItem('nsgen')
-				nsgen.insertText = joinAllSegments([getGenericImports(), getNamespacesSegments(document.uri)])
-				const imp = new CompletionItem('imp')
-				imp.insertText = getImportShorthand(document.uri)
-				const cimp = new CompletionItem('cimp')
-				cimp.insertText = await getClipboardImportShorthand()
-				const variable = getCompletionItem('var')({
-					insertText: getVariableShorthand(document.uri)
-				})
-				const open = getCompletionItemITS('open', getOpenCommand())
-				return [
-					gen,
-					ns,
-					nsgen,
-					imp,
-					cimp,
-					variable,
-					open
-					// getCompletionItem('ind')({
-					// 	insertText: joinAllSegments([getInductiveSegments()])
-					// })
-				]
-			},
-		},
-	)
-
-	context.subscriptions.push(createFreewriteFileCommand)
-	context.subscriptions.push(convertTextToListCommand)
-	context.subscriptions.push(autoImportCommand)
-	context.subscriptions.push(moveDefinitionToNewFileCommand)
-	// context.subscriptions.push(renameLocalVariableCommand)
-	context.subscriptions.push(completions)
-	languages.registerRenameProvider({ language: 'lean4' }, {
-		provideRenameEdits
-	})
-	console.log(process.version)
+  context.subscriptions.push(createFreewriteFileCommand)
+  context.subscriptions.push(convertTextToListCommand)
+  context.subscriptions.push(autoImportCommand)
+  context.subscriptions.push(moveDefinitionToNewFileCommand)
+  // context.subscriptions.push(renameLocalVariableCommand)
+  context.subscriptions.push(completions)
+  languages.registerRenameProvider({ language: 'lean4' }, {
+    provideRenameEdits,
+  })
 }
 
 // This method is called when your extension is deactivated

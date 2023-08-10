@@ -13,7 +13,7 @@ export const nail = (str: string) => {
 
 export const longestCommonPrefix = (strings: string[]) => {
   // check border cases
-  if (strings.length === 0) { return "" }
+  if (strings.length === 0) { return '' }
   if (strings.length === 1) { return strings[0] }
   let i = 0
   // while all words have the same character at position i, increment i

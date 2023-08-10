@@ -62,7 +62,7 @@
     "esbuild": "esbuild ./src/extension.ts --bundle --outfile=./out/src/extension.js --external:vscode --format=cjs --platform=node",
     "pretest": "yarn run typecheck && yarn run lint",
     "lint": "eslint src --fix --ext ts --ignore-path .gitignore --max-warnings=0",
-    "test": "echo 'No tests yet'",
+    "test": "yarn node --require=suppress-experimental-warnings --experimental-vm-modules $(yarn bin jest) --setupFiles dotenv/config --all",
     "test:ci": "yarn test",
     "package": "mkdir -p dist && vsce package -o dist/extension.vsix --yarn",
     "deploy:local": "yarn package && code --install-extension dist/extension.vsix --force"
@@ -90,7 +90,10 @@
     "chai-things": "^0.2.0",
     "esbuild": "^0.18.17",
     "eslint": "^8.39.0",
+    "eslint-plugin-import": "^2.28.0",
+    "eslint-plugin-node": "^11.1.0",
     "glob": "^8.1.0",
+    "suppress-experimental-warnings": "^1.1.17",
     "typescript": "^5.1.6"
   },
   "dependencies": {

@@ -10,7 +10,7 @@ export async function convertTextToList() {
   const selection = editor.selection
   const text = editor.document.getText(selection)
   const lines = text.split('\n').map(line => line.trim()).filter(line => line.length)
-  const linesRendered = lines.map(line => `"${line}"`).join(",\n")
+  const linesRendered = lines.map(line => `"${line}"`).join(',\n')
 
   editor.edit(editBuilder => {
     editBuilder.replace(selection, linesRendered)

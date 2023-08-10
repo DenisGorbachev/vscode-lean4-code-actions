@@ -3,7 +3,7 @@
  */
 
 export interface LeanClient {
-  sendRequest: (method: string, params: any) => Promise<any>
+  sendRequest: (method: string, params: unknown) => Promise<unknown>
 }
 
 export interface LeanClientProvider {

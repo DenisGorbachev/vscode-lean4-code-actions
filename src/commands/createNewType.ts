@@ -33,7 +33,7 @@ export function getTypeFileContent(imports: HieroName[], opens: HieroName[][], d
     openLines,
     parentNamespaceLines,
     typeLines,
-    childNamespaceLines
+    childNamespaceLines,
   ])
 }
 
@@ -41,10 +41,10 @@ async function getKeyword() {
   const keywordQuickPickItems = NewTypeKeywordSchema.options.map<StaticQuickPickItem<NewTypeKeyword>>(keyword => ({
     label: keyword,
     value: keyword,
-    picked: keyword === 'structure'
+    picked: keyword === 'structure',
   }))
   const keywordResult = await window.showQuickPick(keywordQuickPickItems, {
-    title: 'Type keyword'
+    title: 'Type keyword',
   })
   return keywordResult && keywordResult.value
 }
@@ -61,8 +61,8 @@ async function getQuickPickItemsFromWorkspaceSymbols(query: string) {
   const workspaceFolder = ensureWorkspaceFolder(editor.document.uri)
   const workspaceFolderPath = workspaceFolder.uri.fsPath
   const workspaceFolderUriStr = workspaceFolder.uri.toString()
-  const symbols: WorkspaceSymbol[] | null = await client.sendRequest('workspace/symbol', {
-    query
+  const symbols = await client.sendRequest('workspace/symbol', {
+    query,
   }).catch((e) => {
     if (e instanceof Error) {
       window.showErrorMessage(e.toString())
@@ -71,8 +71,8 @@ async function getQuickPickItemsFromWorkspaceSymbols(query: string) {
       window.showErrorMessage(`Unknown error occurred while sending a request to LSP: ${e}`)
       return
     }
-  })
-  if (!symbols) throw new Error(`Received a null response from LSP`)
+  }) as WorkspaceSymbol[] | null
+  if (!symbols) throw new Error('Received a null response from LSP')
   const currentPath = getRelativeFilePathFromAbsoluteFilePath(workspaceFolderPath, editor.document.fileName)
   const symbolsAnchored = symbols.filter(({ name }) => name.endsWith(query))
   const infosRaw = symbolsAnchored.map(({ name, location }) => {
@@ -80,7 +80,7 @@ async function getQuickPickItemsFromWorkspaceSymbols(query: string) {
     return ({
       name,
       path,
-      closeness: longestCommonPrefix([currentPath, path]).length
+      closeness: longestCommonPrefix([currentPath, path]).length,
     })
   })
   const infos = sortBy(
@@ -94,7 +94,7 @@ async function getQuickPickItemsFromWorkspaceSymbols(query: string) {
     label: '$(symbol-constructor) ' + symbol.name,
     description: symbol.path,
     picked: index === 0,
-    getValue: async () => toNamespace(getLeanNamesFromMaybeLakeRelativeFilePath(symbol.path))
+    getValue: async () => toNamespace(getLeanNamesFromMaybeLakeRelativeFilePath(symbol.path)),
   }))
 }
 
@@ -104,14 +104,14 @@ function getTypeLines(derivings: HieroName[], keyword: NewTypeKeyword, name: Nam
     case 'inductive':
       return [
         `${keyword} ${name} where`,
-        ``,
-        `deriving ${derivings.map(toNamespace).join(', ')}`
+        '',
+        `deriving ${derivings.map(toNamespace).join(', ')}`,
       ]
     case 'abbrev':
       return [
         `${keyword} ${name} := sorry`,
-        ``,
-        `deriving instance ${derivings.map(toNamespace).join(', ')} for ${name}`
+        '',
+        `deriving instance ${derivings.map(toNamespace).join(', ')} for ${name}`,
       ]
   }
 }

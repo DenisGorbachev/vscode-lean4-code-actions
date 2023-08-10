@@ -13,10 +13,10 @@ import { longestCommonPrefix } from '../utils/string'
 export async function autoImport() {
   const editor = ensureEditor()
   const name = getSelectedName(editor)
-  if (!name) throw new Error(`Text selection is empty: please select the name for auto-import in the editor`)
+  if (!name) throw new Error('Text selection is empty: please select the name for auto-import in the editor')
   const itemsArray = await Promise.all([
     getQuickPickItemsFromWorkspaceFiles(name),
-    getQuickPickItemsFromWorkspaceSymbols(name)
+    getQuickPickItemsFromWorkspaceSymbols(name),
   ])
   const items = flatten(itemsArray)
   const result = await window.showQuickPick(items, {
@@ -41,7 +41,7 @@ async function getQuickPickItemsFromWorkspaceFiles(name: string) {
     return ({
       label: '$(file) ' + getRelativeFilePathFromAbsoluteFilePath(workspaceFolder.uri.fsPath, uri.fsPath),
       picked: index === 0,
-      getValue: async () => getLeanImportPathFromAbsoluteFilePath(workspaceFolder.uri.fsPath, uri.fsPath)
+      getValue: async () => getLeanImportPathFromAbsoluteFilePath(workspaceFolder.uri.fsPath, uri.fsPath),
     })
   })
 }
@@ -58,8 +58,8 @@ async function getQuickPickItemsFromWorkspaceSymbols(query: string) {
   const workspaceFolder = ensureWorkspaceFolder(editor.document.uri)
   const workspaceFolderPath = workspaceFolder.uri.fsPath
   const workspaceFolderUriStr = workspaceFolder.uri.toString()
-  const symbols: WorkspaceSymbol[] | null = await client.sendRequest('workspace/symbol', {
-    query
+  const symbols = await client.sendRequest('workspace/symbol', {
+    query,
   }).catch((e) => {
     if (e instanceof Error) {
       window.showErrorMessage(e.toString())
@@ -68,8 +68,8 @@ async function getQuickPickItemsFromWorkspaceSymbols(query: string) {
       window.showErrorMessage(`Unknown error occurred while sending a request to LSP: ${e}`)
       return
     }
-  })
-  if (!symbols) throw new Error(`Received a null response from LSP`)
+  }) as WorkspaceSymbol[] | null
+  if (!symbols) throw new Error('Received a null response from LSP')
   const currentPath = getRelativeFilePathFromAbsoluteFilePath(workspaceFolderPath, editor.document.fileName)
   const symbolsAnchored = symbols.filter(({ name }) => name.endsWith(query))
   const infosRaw = symbolsAnchored.map(({ name, location }) => {
@@ -77,7 +77,7 @@ async function getQuickPickItemsFromWorkspaceSymbols(query: string) {
     return ({
       name,
       path,
-      closeness: longestCommonPrefix([currentPath, path]).length
+      closeness: longestCommonPrefix([currentPath, path]).length,
     })
   })
   const infos = sortBy(
@@ -91,7 +91,7 @@ async function getQuickPickItemsFromWorkspaceSymbols(query: string) {
     label: '$(symbol-constructor) ' + symbol.name,
     description: symbol.path,
     picked: index === 0,
-    getValue: async () => toNamespace(getLeanNamesFromMaybeLakeRelativeFilePath(symbol.path))
+    getValue: async () => toNamespace(getLeanNamesFromMaybeLakeRelativeFilePath(symbol.path)),
   }))
 }
 

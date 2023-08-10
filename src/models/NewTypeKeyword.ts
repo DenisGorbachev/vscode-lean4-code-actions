@@ -5,7 +5,7 @@ import { z } from 'zod'
 export const NewTypeKeywordSchema = z.enum([
   'structure',
   'inductive',
-  'abbrev'
+  'abbrev',
 ]).describe('NewTypeKeyword')
 
 export const NewTypeKeywordsSchema = getArraySchema(NewTypeKeywordSchema, identity)

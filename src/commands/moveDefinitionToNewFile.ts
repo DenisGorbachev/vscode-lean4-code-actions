@@ -9,7 +9,7 @@ import { ensureEditor } from '../utils/TextEditor'
 import { Line, Segment, combineAll } from '../utils/text'
 
 const getMatcher = (r: RegExp) => (text: string) => text.match(r)
-const getRegExpForLineStartingWith = (start: string) => new RegExp("^" + start + '.*', 'gm')
+const getRegExpForLineStartingWith = (start: string) => new RegExp('^' + start + '.*', 'gm')
 
 const importRegExp = getRegExpForLineStartingWith('import')
 const openRegExp = getRegExpForLineStartingWith('open')
@@ -30,7 +30,7 @@ export async function moveDefinitionToNewFile() {
   const fullNames = currentNames.concat(selectionNames)
   const relativeFilePath = getRelativeFilePathFromNames(fullNames)
   const absoluteFilePath = getAbsoluteFilePathFromRelativeFilePath(document.uri, relativeFilePath)
-  if (absoluteFilePath === document.uri.fsPath) throw new Error(`The definition belongs to this file. See the extension docs for more details."`)
+  if (absoluteFilePath === document.uri.fsPath) throw new Error('The definition belongs to this file. See the extension docs for more details."')
   // Create a new file
   const content = getContent(allImports, allOpens)(blockText)(currentNames, selectionNames)
   await writeFileWithDirThrowIfExists(absoluteFilePath, content)

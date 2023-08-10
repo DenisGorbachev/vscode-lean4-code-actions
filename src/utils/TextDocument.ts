@@ -1,4 +1,4 @@
-import { Position, Range, TextDocument } from "vscode"
+import { Position, Range, TextDocument } from 'vscode'
 
 export function getCurrentCodeBlockAt(position: Position, document: TextDocument) {
   const { getText, offsetAt, positionAt } = document

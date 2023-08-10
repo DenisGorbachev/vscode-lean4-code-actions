@@ -1,6 +1,6 @@
-import { escapeRegExp } from "voca"
-import { CancellationToken, Position, TextDocument, WorkspaceEdit } from "vscode"
-import { getCurrentCodeBlockAt } from "../utils/TextDocument"
+import { escapeRegExp } from 'voca'
+import { CancellationToken, Position, TextDocument, WorkspaceEdit } from 'vscode'
+import { getCurrentCodeBlockAt } from '../utils/TextDocument'
 
 // {
 //   "command": "vscode-lean4-code-actions.renameLocalVariable",
@@ -28,9 +28,9 @@ export async function provideRenameEdits(document: TextDocument, position: Posit
   const blockText = getText(blockRange)
   const wordRange = getWordRangeAtPosition(position)
   const wordText = getText(wordRange)
-  const notPrecededByWordCharacter = "(?<!\\w)"
-  const notFollowedByWordCharacter = "(?!\\w)"
-  const regexp = new RegExp(notPrecededByWordCharacter + escapeRegExp(wordText) + notFollowedByWordCharacter, "g")
+  const notPrecededByWordCharacter = '(?<!\\w)'
+  const notFollowedByWordCharacter = '(?!\\w)'
+  const regexp = new RegExp(notPrecededByWordCharacter + escapeRegExp(wordText) + notFollowedByWordCharacter, 'g')
   const blockTextNew = blockText.replace(regexp, newName)
   edit.replace(document.uri, blockRange, blockTextNew)
   return edit

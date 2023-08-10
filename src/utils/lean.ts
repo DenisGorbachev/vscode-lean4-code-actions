@@ -23,7 +23,6 @@ export const ensureNames = (uri: Uri) => {
   return namespaces
 }
 
-
 export const toNames = (namespace: string) => namespace.split(leanNameSeparator)
 
 export const toNamespace = (names: string[]) => names.join(leanNameSeparator)

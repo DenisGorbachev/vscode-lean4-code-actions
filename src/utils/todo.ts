@@ -1,7 +1,7 @@
-import { nail } from "./string"
+import { nail } from './string'
 
 export function todo<V>(value?: V, message = 'TODO'): V {
-  if (value === undefined) {throw impl(message)}
+  if (value === undefined) { throw impl(message) }
   return value
 }
 
