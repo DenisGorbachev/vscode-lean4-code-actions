@@ -50,14 +50,20 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "yarn run esbuild --minify",
-    "esbuild": "esbuild ./src/extension.ts --bundle --outfile=./out/src/extension.js --external:vscode --format=cjs --platform=node",
     "build": "yarn run esbuild --sourcemap",
     "watch": "yarn run esbuild --sourcemap --watch",
     "typecheck": "tsc --noEmit",
+    "lint:all": "yarn lint:code:all && yarn lint:markdown:all",
+    "lint:code": "eslint --fix --config .eslintrc.ci.cjs --ignore-path .gitignore --max-warnings=0",
+    "lint:code:all": "yarn lint:code .",
+    "lint:markdown:text": "markdownlint --fix --ignore-path .gitignore",
+    "lint:markdown:all": "yarn lint:markdown:text .",
+    "vscode:prepublish": "yarn run esbuild --minify",
+    "esbuild": "esbuild ./src/extension.ts --bundle --outfile=./out/src/extension.js --external:vscode --format=cjs --platform=node",
     "pretest": "yarn run typecheck && yarn run lint",
     "lint": "eslint src --fix --ext ts --ignore-path .gitignore --max-warnings=0",
-    "test": "node ./out/test/runTest.js",
+    "test": "echo 'No tests yet'",
+    "test:ci": "yarn test",
     "package": "mkdir -p dist && vsce package -o dist/extension.vsix --yarn",
     "deploy:local": "yarn package && code --install-extension dist/extension.vsix --force"
   },

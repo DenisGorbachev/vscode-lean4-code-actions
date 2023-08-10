@@ -1,0 +1,14 @@
+pre-commit:
+  parallel: true
+  commands:
+    lint-code:
+      glob: "*.{ts,tsx,js,jsx}"
+      run: yarn lint:code {staged_files}
+    lint-markdown-text:
+      glob: "*.md"
+      run: yarn lint:markdown:text {staged_files} && git update-index -g
+    typecheck:
+      glob: "*.{ts,tsx}"
+      run: yarn typecheck
+    test:
+      run: yarn test --passWithNoTests
