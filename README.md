@@ -27,7 +27,9 @@ Note: a custom language configuration is available as [a separate extension](htt
 
 ### Auto-import
 
-* If you execute this command with an empty selection (just a cursor on the name), then only the part captured by [`getWordRangeAtPosition`](https://code.visualstudio.com/api/references/vscode-api#TextDocument.getWordRangeAtPosition) will be used. To import a hierarchical name, select it fully, then execute the command.
+✅ Works
+
+If you execute this command with an empty selection (just a cursor on the name), then only the part captured by [`getWordRangeAtPosition`](https://code.visualstudio.com/api/references/vscode-api#TextDocument.getWordRangeAtPosition) will be used. To import a hierarchical name, select it fully, then execute the command.
 
 <!-- ## Following extension guidelines
 
@@ -38,9 +40,15 @@ Ensure that you've read through the extensions guidelines and follow the best pr
 
 ### Extract definition to a separate file
 
+✅ Works
+
 ### Create a new type in a separate file
 
+✅ Works
+
 ### Find-replace the current word within a code block
+
+✅ Works
 
 A code block is defined as a continuous list of non-blank lines.
 
@@ -49,6 +57,8 @@ Tip: you can use it to rename a local binding (if the variable name is a unique 
 Note: this functionality is activated via "Rename Symbol" native command. Please open an issue if it causes problems.
 
 ### Convert a text block to a list of strings
+
+✅ Works
 
 **Before:**
 
