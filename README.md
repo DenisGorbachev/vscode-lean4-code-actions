@@ -56,11 +56,32 @@ Configuration options:
 
 ✅ Works
 
-A code block is defined as a continuous list of non-blank lines.
+**Before:**
 
-Tip: you can use it to rename a local binding (if the variable name is a unique string of characters across the code block).
+```lean
+def foo : IO String := do
+  let text ← IO.FS.readFile "/tmp/secrets"
+  return text
+```
 
-Note: this functionality is activated via "Rename Symbol" native command. Please open an issue if it causes problems.
+**After:**
+
+```lean
+def foo : IO String := do
+  let secrets ← IO.FS.readFile "/tmp/secrets"
+  return secrets
+```
+
+You can use it to rename a local binding (if the variable name is a unique string of characters across the code block).
+
+Gotchas:
+
+* It's a simple find-replace: it doesn't distinguish between variables and text within strings, for example.
+* It's activated via "Rename Symbol" native command. If it causes problems, you can disable it by setting `lean4CodeActions.registerRenameProvider` to `false` in the extension configuration.
+
+Notes:
+
+* A code block is defined as a continuous list of non-blank lines.
 
 ### Convert a text block to a list of strings
 
