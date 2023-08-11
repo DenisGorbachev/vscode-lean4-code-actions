@@ -2,6 +2,7 @@ import { flatten, last, sortBy } from 'remeda'
 import { Name } from 'src/models/Lean/Name'
 import { toNames, toNamespace } from 'src/utils/Lean'
 import { LeanExports } from 'src/utils/LeanExtension'
+import { isZero } from 'src/utils/Position'
 import { ensureWorkspaceFolder } from 'src/utils/workspace'
 import { extensions, window, workspace } from 'vscode'
 import { WorkspaceSymbol } from 'vscode-languageserver-types'
@@ -27,7 +28,8 @@ export async function autoImport() {
   const leanImportPath = await result.getValue()
   const insertPosition = getImportInsertPosition(editor)
   editor.edit(editBuilder => {
-    editBuilder.insert(insertPosition, `import ${leanImportPath}\n`)
+    const suffix = isZero(insertPosition) ? '\n' : ''
+    editBuilder.insert(insertPosition, `import ${leanImportPath}\n` + suffix)
   })
 }
 

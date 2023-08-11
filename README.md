@@ -1,6 +1,7 @@
 # VSCode Lean 4 Code Actions
 
 <p align="center">
+  <img src="./img/autoImport.gif"/>
 </p>
 
 <p align="center" style="padding: 20px 0">
