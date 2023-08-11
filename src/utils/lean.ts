@@ -1,4 +1,6 @@
 import * as path from 'path'
+import { sep } from 'path'
+import { Name } from 'src/models/Lean/Name'
 import { Uri, workspace } from 'vscode'
 import { Segment } from './text'
 
@@ -46,3 +48,6 @@ export const getNamespacesSegments = (uri: Uri): Segment[] => {
   return segments
 }
 
+export function getRelativeFilePathFromLeanNames(names: Name[]) {
+  return names.join(sep) + '.lean'
+}

@@ -1,7 +1,9 @@
 import { sep } from 'path'
 import { identity } from 'remeda'
-import { writeFileWithDirThrowIfExists } from 'src/utils/file'
-import { Uri, commands, workspace } from 'vscode'
+import { withWorkspaceEdit } from 'src/utils/WorkspaceEdit'
+import { getUriFromLeanNames } from 'src/utils/WorkspaceFolder'
+import { ensureWorkspaceFolder } from 'src/utils/workspace'
+import { commands } from 'vscode'
 import { ensureNames, toNamespace, toNamespaceDeclaration } from '../utils/Lean'
 import { cloneRegExp } from '../utils/RegExp'
 import { getCurrentCodeBlockAt } from '../utils/TextDocument'
@@ -16,10 +18,11 @@ const openRegExp = getRegExpForLineStartingWith('open')
 const getImports = getMatcher(importRegExp)
 const getOpens = getMatcher(openRegExp)
 
-export async function moveDefinitionToNewFile() {
+export async function extractDefinitionToSeparateFile() {
   const editor = ensureEditor()
   const { document } = editor
   const { getText, positionAt } = document
+  const workspaceFolder = ensureWorkspaceFolder(document.uri)
   const textAll = getText()
   const allImports = getImports(textAll) || []
   const allOpens = getOpens(textAll) || []
@@ -28,31 +31,24 @@ export async function moveDefinitionToNewFile() {
   const currentNames = ensureNames(document.uri).slice(0, -1)
   const selectionNames = getSelectionNames(blockText)
   const fullNames = currentNames.concat(selectionNames)
-  const relativeFilePath = getRelativeFilePathFromNames(fullNames)
-  const absoluteFilePath = getAbsoluteFilePathFromRelativeFilePath(document.uri, relativeFilePath)
-  if (absoluteFilePath === document.uri.fsPath) throw new Error('The definition belongs to this file. See the extension docs for more details."')
+  const uri = getUriFromLeanNames(workspaceFolder, fullNames)
+  // const relativeFilePath = getRelativeFilePathFromNames(fullNames)
+  // const absoluteFilePath = getAbsoluteFilePathFromRelativeFilePath(document.uri, relativeFilePath)
+  // if (absoluteFilePath === document.uri.fsPath) throw new Error('The definition belongs to this file. See the extension docs for more details."')
   // Create a new file
   const content = getContent(allImports, allOpens)(blockText)(currentNames, selectionNames)
-  await writeFileWithDirThrowIfExists(absoluteFilePath, content)
-  // Edit the current file
   const closestImportLastIndex = getLastIndexMatchBefore(importRegExp, document.offsetAt(editor.selection.active), textAll)
   const importInsertOffset = closestImportLastIndex ? closestImportLastIndex + 1 : 0
-  await editor.edit(builder => {
-    builder.delete(block)
-    builder.insert(positionAt(importInsertOffset), `import ${toNamespace(fullNames)}\n`)
+  await withWorkspaceEdit(async edit => {
+    edit.createFile(uri, { contents: Buffer.from(content) })
+    edit.delete(document.uri, block)
+    edit.insert(document.uri, positionAt(importInsertOffset), `import ${toNamespace(fullNames)}\n`)
   })
-  // Open the new file
-  await commands.executeCommand('vscode.open', Uri.file(absoluteFilePath))
+  await commands.executeCommand('vscode.open', uri)
 }
 
 function getRelativeFilePathFromNames(names: string[]) {
   return names.join(sep) + '.lean'
-}
-
-function getAbsoluteFilePathFromRelativeFilePath(uri: Uri, localFilePath: string) {
-  const workspaceFolder = workspace.getWorkspaceFolder(uri)
-  if (!workspaceFolder) throw new Error(`Cannot get a workspace folder for the file uri: "${uri}"`)
-  return workspaceFolder.uri.fsPath + sep + localFilePath
 }
 
 const getSelectionNames = (selection: string) => {

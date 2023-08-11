@@ -3,9 +3,9 @@
 ## Features
 
 * [Auto-import a definition](#auto-import)
-* Extract definition to a separate file
-* Rename a local `let` binding (simple version)
-* Convert a text block to a list of strings (each line becomes an element of the list)
+* [Extract definition to a separate file](#extract-definition-to-a-separate-file)
+* [Find-replace the current word within a code block](#find-replace-the-current-word-within-a-code-block)
+* [Convert a text block to a list of strings](#convert-a-text-block-to-a-list-of-strings)
 
 <!-- Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
 
@@ -29,3 +29,33 @@ Ensure that you've read through the extensions guidelines and follow the best pr
 
 * [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
  -->
+
+### Extract definition to a separate file
+
+### Find-replace the current word within a code block
+
+A code block is defined as a continuous list of non-blank lines.
+
+Tip: you can use it to rename a local binding (if the variable name is a unique string of characters across the code block).
+
+Note: this functionality is activated via "Rename Symbol" native command. Please open an issue if it causes problems.
+
+### Convert a text block to a list of strings
+
+**Before:**
+
+```text
+foo
+bar
+xyz
+```
+
+**After:**
+
+```text
+"foo",
+"bar",
+"xyz"
+```
+
+Each line becomes an element of the list.

@@ -1,5 +1,5 @@
 {
-  "name": "vscode-lean4-code-actions",
+  "name": "lean4-code-actions",
   "displayName": "Lean 4 Code Actions",
   "description": "Refactorings and snippets for Lean 4",
   "version": "1.0.0",
@@ -28,23 +28,61 @@
   ],
   "main": "./out/src/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "Lean 4 Code Actions",
+      "properties": {
+        "lean4CodeActions.registerRenameProvider": {
+          "markdownDescription": "Use this extension as a rename provider for Lean files **(restart required)**",
+          "type": "boolean",
+          "default": true
+        },
+        "lean4CodeActions.createNewTypeFile.imports": {
+          "markdownDescription": "Imports that should be added to every new type file",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "lean4CodeActions.createNewTypeFile.opens": {
+          "markdownDescription": "Opens that should be added to every new type file",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "lean4CodeActions.createNewTypeFile.derivings": {
+          "markdownDescription": "Derived typeclasses that should be added to every new type file\n\nNote: you can rely on #lean4CodeActions.createNewTypeFile.imports# and #lean4CodeActions.createNewTypeFile.opens#",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
     "commands": [
       {
-        "command": "vscode-lean4-code-actions.autoImport",
+        "command": "lean4CodeActions.autoImport",
         "title": "Lean 4: Auto-import the definition under cursor",
         "shortTitle": "Lean 4: Auto-import"
       },
       {
-        "command": "vscode-lean4-code-actions.moveDefinitionToNewFile",
-        "title": "Lean 4: Move definition to a new file",
-        "shortTitle": "Lean 4: Move definition"
+        "command": "lean4CodeActions.extractDefinitionToSeparateFile",
+        "title": "Lean 4: Extract definition to a separate file",
+        "shortTitle": "Lean 4: Extract definition"
       },
       {
-        "command": "vscode-lean4-code-actions.createFreewriteFile",
+        "command": "lean4CodeActions.createNewTypeFile",
+        "title": "Lean 4: Create a new type file"
+      },
+      {
+        "command": "lean4CodeActions.createFreewriteFile",
         "title": "Lean 4: Create a freewrite file"
       },
       {
-        "command": "vscode-lean4-code-actions.convertTextToList",
+        "command": "lean4CodeActions.convertTextToList",
         "title": "Lean 4: Convert a text to list line-by-line"
       }
     ]
@@ -60,10 +98,10 @@
     "lint:markdown:all": "yarn lint:markdown:text .",
     "vscode:prepublish": "yarn run esbuild --minify",
     "esbuild": "esbuild ./src/extension.ts --bundle --outfile=./out/src/extension.js --external:vscode --format=cjs --platform=node",
-    "pretest": "yarn run typecheck && yarn run lint",
     "lint": "eslint src --fix --ext ts --ignore-path .gitignore --max-warnings=0",
     "test": "yarn node --require=suppress-experimental-warnings --experimental-vm-modules $(yarn bin jest) --setupFiles dotenv/config --all",
     "test:ci": "yarn test",
+    "test:watch": "yarn test --watchAll --bail",
     "package": "mkdir -p dist && vsce package -o dist/extension.vsix --yarn",
     "deploy:local": "yarn package && code --install-extension dist/extension.vsix --force"
   },
@@ -93,6 +131,7 @@
     "eslint-plugin-import": "^2.28.0",
     "eslint-plugin-node": "^11.1.0",
     "glob": "^8.1.0",
+    "markdownlint-cli": "^0.35.0",
     "suppress-experimental-warnings": "^1.1.17",
     "typescript": "^5.1.6"
   },

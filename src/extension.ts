@@ -3,26 +3,30 @@
 import * as path from 'path'
 import { identity, last } from 'remeda'
 import { kebabCase } from 'voca'
-import { CompletionItem, CompletionItemKind, CompletionItemLabel, ExtensionContext, Position, TextDocument, Uri, commands, env, languages, window } from 'vscode'
+import { CompletionItem, CompletionItemKind, CompletionItemLabel, ExtensionContext, Position, TextDocument, Uri, commands, env, languages, window, workspace } from 'vscode'
 import { autoImport } from './commands/autoImport'
 import { convertTextToList } from './commands/convertTextToList'
 import { createFreewriteFile } from './commands/createFreewriteFile'
-import { moveDefinitionToNewFile } from './commands/moveDefinitionToNewFile'
+import { createNewTypeFile } from './commands/createNewTypeFile'
+import { extractDefinitionToSeparateFile } from './commands/extractDefinitionToSeparateFile'
 import { provideRenameEdits } from './commands/renameLocalVariable'
 import { getNames, getNamespacesSegments } from './utils/Lean'
 import { joinAllSegments } from './utils/text'
 
 export function activate(context: ExtensionContext) {
+  const config = workspace.getConfiguration('lean4CodeActions')
 
-  const createFreewriteFileCommand = commands.registerCommand('vscode-lean4-code-actions.createFreewriteFile', createFreewriteFile)
+  const createFreewriteFileCommand = commands.registerCommand('lean4CodeActions.createFreewriteFile', createFreewriteFile)
 
-  const convertTextToListCommand = commands.registerCommand('vscode-lean4-code-actions.convertTextToList', convertTextToList)
+  const convertTextToListCommand = commands.registerCommand('lean4CodeActions.convertTextToList', convertTextToList)
 
-  const autoImportCommand = commands.registerCommand('vscode-lean4-code-actions.autoImport', autoImport)
+  const autoImportCommand = commands.registerCommand('lean4CodeActions.autoImport', autoImport)
 
-  const moveDefinitionToNewFileCommand = commands.registerCommand('vscode-lean4-code-actions.moveDefinitionToNewFile', moveDefinitionToNewFile)
+  const extractDefinitionToSeparateFileCommand = commands.registerCommand('lean4CodeActions.extractDefinitionToSeparateFile', extractDefinitionToSeparateFile)
 
-  // const renameLocalVariableCommand = commands.registerCommand('vscode-lean4-code-actions.renameLocalVariable', renameLocalVariable)
+  const createNewTypeFileCommand = commands.registerCommand('lean4CodeActions.createNewTypeFile', createNewTypeFile)
+
+  // const renameLocalVariableCommand = commands.registerCommand('lean4CodeActions.renameLocalVariable', renameLocalVariable)
 
   // const getInductiveSegments = (name: string | undefined) => {
 
@@ -163,12 +167,12 @@ export function activate(context: ExtensionContext) {
   context.subscriptions.push(createFreewriteFileCommand)
   context.subscriptions.push(convertTextToListCommand)
   context.subscriptions.push(autoImportCommand)
-  context.subscriptions.push(moveDefinitionToNewFileCommand)
-  // context.subscriptions.push(renameLocalVariableCommand)
+  context.subscriptions.push(extractDefinitionToSeparateFileCommand)
+  context.subscriptions.push(createNewTypeFileCommand)
   context.subscriptions.push(completions)
-  languages.registerRenameProvider({ language: 'lean4' }, {
-    provideRenameEdits,
-  })
+  if (config.get('registerRenameProvider')) {
+    languages.registerRenameProvider({ language: 'lean4' }, { provideRenameEdits })
+  }
 }
 
 // This method is called when your extension is deactivated

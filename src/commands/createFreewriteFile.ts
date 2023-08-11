@@ -1,7 +1,6 @@
-import { existsSync } from 'fs'
-import { writeFile } from 'fs/promises'
-import { Uri, commands, window, workspace } from 'vscode'
-import { nail } from '../utils/string'
+import { nail } from 'libs/utils/string'
+import { createFileIfNotExists } from 'src/utils/WorkspaceEdit'
+import { commands, window, workspace } from 'vscode'
 
 export async function createFreewriteFile() {
   const { workspaceFolders } = workspace
@@ -20,12 +19,11 @@ export async function createFreewriteFile() {
   const now = new Date()
 
   const ns = getFreewriteNamespace(now)
-  const filename = `${root}/Freewrite/${ns}.lean`
-  if (!existsSync(filename)) {
-    const content = getFreewriteFileContent(ns)
-    await writeFile(filename, content)
-  }
-  await commands.executeCommand('vscode.open', Uri.file(filename))
+  const path = `${root}/Freewrite/${ns}.lean`
+  const uri = workspaceFolder.uri.with({ path })
+  const content = getFreewriteFileContent(ns)
+  await createFileIfNotExists(uri, content, { overwrite: false })
+  await commands.executeCommand('vscode.open', uri)
 }
 
 const getFreewriteFileContent = (namespace: string) => {

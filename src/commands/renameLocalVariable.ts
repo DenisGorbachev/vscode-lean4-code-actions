@@ -3,7 +3,7 @@ import { CancellationToken, Position, TextDocument, WorkspaceEdit } from 'vscode
 import { getCurrentCodeBlockAt } from '../utils/TextDocument'
 
 // {
-//   "command": "vscode-lean4-code-actions.renameLocalVariable",
+//   "command": "lean4CodeActions.renameLocalVariable",
 //   "title": "Lean 4 Extra: Rename a local variable (using simple find-replace within a code block)",
 //   "shortTitle": "Lean 4 Extra: Rename a local variable"
 // },
