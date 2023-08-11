@@ -1,27 +1,32 @@
 # VSCode Lean 4 Code Actions
 
-## Features
+<p align="center">
+</p>
 
-* [Auto-import a definition](#auto-import)
-* [Extract definition to a separate file](#extract-definition-to-a-separate-file)
-* [Find-replace the current word within a code block](#find-replace-the-current-word-within-a-code-block)
-* [Convert a text block to a list of strings](#convert-a-text-block-to-a-list-of-strings)
+<p align="center" style="padding: 20px 0">
+  <a href="https://marketplace.visualstudio.com/items?itemName=denis-gorbachev.lean4-code-actions&ssr=false">
+    <img src="https://img.shields.io/badge/Install-VSCode%20Marketplace-blue" />
+  </a>
+</p>
 
-<!-- Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+## Installation
 
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow. -->
+* [Install the extension](https://marketplace.visualstudio.com/items?itemName=denis-gorbachev.lean4-code-actions&ssr=false)
+* Add the keyboard shortcuts to [useful commands](#commands)
 
 Note: a custom language configuration is available as [a separate extension](https://github.com/DenisGorbachev/vscode-lean4-language-configuration).
 
+## Commands
+
+* [Auto-import a definition](#auto-import)
+* [Extract definition to a separate file](#extract-definition-to-a-separate-file)
+* [Create a new type in a separate file](#create-a-new-type-in-a-separate-file)
+* [Find-replace the current word within a code block](#find-replace-the-current-word-within-a-code-block)
+* [Convert a text block to a list of strings](#convert-a-text-block-to-a-list-of-strings)
+
 ### Auto-import
 
-NOTE: Currently, auto-import works only for symbols that are present in the currently open files. This is a limitation of the Lean LSP server: it only searches symbols in the open files.
-
-* If the user executes this command with empty selection (just puts a cursor on the name), then only the part captured by `getWordRangeAtPosition` is used. In particular, it doesn't capture hierarchical names. For example, given a name `Foo.Bar.Baz`, and the cursor at index 1 (after `F`), it will capture only `Foo`, not the full name.
+* If you execute this command with an empty selection (just a cursor on the name), then only the part captured by [`getWordRangeAtPosition`](https://code.visualstudio.com/api/references/vscode-api#TextDocument.getWordRangeAtPosition) will be used. To import a hierarchical name, select it fully, then execute the command.
 
 <!-- ## Following extension guidelines
 
@@ -31,6 +36,8 @@ Ensure that you've read through the extensions guidelines and follow the best pr
  -->
 
 ### Extract definition to a separate file
+
+### Create a new type in a separate file
 
 ### Find-replace the current word within a code block
 
