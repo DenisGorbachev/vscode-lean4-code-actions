@@ -74,12 +74,12 @@ def foo : IO String := do
 
 You can use it to rename a local binding (if the variable name is a unique string of characters across the code block).
 
-Gotchas:
+**Gotchas:**
 
 * It's a simple find-replace: it doesn't distinguish between variables and text within strings, for example.
 * It's activated via "Rename Symbol" native command. If it causes problems, you can disable it by setting `lean4CodeActions.registerRenameProvider` to `false` in the extension configuration.
 
-Notes:
+**Notes:**
 
 * A code block is defined as a continuous list of non-blank lines.
 
