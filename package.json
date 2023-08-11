@@ -4,7 +4,7 @@
   "description": "Refactorings and snippets for Lean 4",
   "version": "1.0.0",
   "license": "MIT",
-  "publisher": "dengorbachev",
+  "publisher": "denis-gorbachev",
   "repository": {
     "type": "github",
     "url": "https://github.com/DenisGorbachev/vscode-lean4-code-actions"
@@ -96,13 +96,14 @@
     "lint:code:all": "yarn lint:code .",
     "lint:markdown:text": "markdownlint --fix --ignore-path .gitignore",
     "lint:markdown:all": "yarn lint:markdown:text .",
-    "vscode:prepublish": "yarn run esbuild --minify",
     "esbuild": "esbuild ./src/extension.ts --bundle --outfile=./out/src/extension.js --external:vscode --format=cjs --platform=node",
     "lint": "eslint src --fix --ext ts --ignore-path .gitignore --max-warnings=0",
     "test": "yarn node --require=suppress-experimental-warnings --experimental-vm-modules $(yarn bin jest) --setupFiles dotenv/config --all",
     "test:ci": "yarn test",
     "test:watch": "yarn test --watchAll --bail",
-    "package": "mkdir -p dist && vsce package -o dist/extension.vsix --yarn",
+    "vscode:prepublish": "yarn run esbuild --minify",
+    "vscode:package": "mkdir -p dist && vsce package --yarn -o dist/extension.vsix",
+    "vscode:publish": "mkdir -p dist && vsce publish --yarn",
     "deploy:local": "yarn package && code --install-extension dist/extension.vsix --force"
   },
   "devDependencies": {
