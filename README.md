@@ -46,6 +46,12 @@ Ensure that you've read through the extensions guidelines and follow the best pr
 
 ✅ Works
 
+Configuration options:
+
+* `lean4CodeActions.createNewTypeFile.imports` - a list of Lean filenames to be imported
+* `lean4CodeActions.createNewTypeFile.opens` - a list of Lean namespaces to be opened
+* `lean4CodeActions.createNewTypeFile.derivings` - a list of Lean names to be added to the `deriving` clause
+
 ### Find-replace the current word within a code block
 
 ✅ Works
