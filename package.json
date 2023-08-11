@@ -9,6 +9,7 @@
     "type": "github",
     "url": "https://github.com/DenisGorbachev/vscode-lean4-code-actions"
   },
+  "icon": "img/icon.128x128.png",
   "engines": {
     "vscode": "^1.78.0"
   },
