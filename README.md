@@ -81,7 +81,7 @@ def x : Rat := 1.0
 
 **Gotchas:**
 
-* If you execute this command with an empty selection (just a cursor on the name), then only the part captured by [`getWordRangeAtPosition`](https://code.visualstudio.com/api/references/vscode-api#TextDocument.getWordRangeAtPosition) will be used. To import a hierarchical name, select it fully, then execute the command.
+* If you execute this command with an empty selection (just a cursor on the name), then only the part captured by [`getWordRangeAtPosition`](https://code.visualstudio.com/api/references/vscode-api#TextDocument.getWordRangeAtPosition) will be used. To import a hierarchical name, select it fully, then execute the command. Alternatively, you can enable detection of hierarchical names by installing [a custom language configuration](https://marketplace.visualstudio.com/items?itemName=denis-gorbachev.lean4-language-configuration).
 
 ---
 
@@ -164,6 +164,7 @@ You can use it to rename a local binding (if the variable name is a unique strin
 
 * It's a simple find-replace: it doesn't distinguish between variables and text within strings, for example.
 * It's activated via "Rename Symbol" native command. If it causes problems, you can disable it by setting `lean4CodeActions.registerRenameProvider` to `false` in the extension configuration.
+* It relies on [`getWordRangeAtPosition`](https://code.visualstudio.com/api/references/vscode-api#TextDocument.getWordRangeAtPosition) to detect the word under cursor. You can improve the detection by installing [a custom language configuration](https://marketplace.visualstudio.com/items?itemName=denis-gorbachev.lean4-language-configuration).
 
 **Notes:**
 
