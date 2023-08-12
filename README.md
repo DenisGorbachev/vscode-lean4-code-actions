@@ -49,13 +49,15 @@ def x : Rat := 1.0
 
 * If you execute this command with an empty selection (just a cursor on the name), then only the part captured by [`getWordRangeAtPosition`](https://code.visualstudio.com/api/references/vscode-api#TextDocument.getWordRangeAtPosition) will be used. To import a hierarchical name, select it fully, then execute the command.
 
+---
+
 ### Extract a definition to a separate file
 
 <img src="./img/extractDefinitionToSeparateFile.gif"/>
 
 **Before:**
 
-File: `CodeActions/Test/ExtractDefinition/Book.lean`
+File 1: `CodeActions/Test/ExtractDefinition/Book.lean`
 
 ```lean
 namespace CodeActions.Test.ExtractDefinition
@@ -69,7 +71,7 @@ structure Book where
 
 **After:**
 
-File: `CodeActions/Test/ExtractDefinition/Book.lean`
+File 1: `CodeActions/Test/ExtractDefinition/Book.lean`
 
 ```lean
 import CodeActions.Test.ExtractDefinition.Author
@@ -80,7 +82,7 @@ structure Book where
   authors : List Author 
 ```
 
-File: `CodeActions/Test/ExtractDefinition/Author.lean`
+File 2: `CodeActions/Test/ExtractDefinition/Author.lean`
 
 ```lean
 namespace CodeActions.Test.ExtractDefinition
@@ -99,6 +101,8 @@ namespace Author
 **Gotchas:**
 
 * It doesn't add the `open` declaration yet
+
+---
 
 ### Create a new type in a separate file
 
@@ -125,6 +129,8 @@ namespace User
 * `lean4CodeActions.createNewFile.imports` - a list of Lean filenames to be imported
 * `lean4CodeActions.createNewFile.opens` - a list of Lean namespaces to be opened
 * `lean4CodeActions.createNewFile.derivings` - a list of Lean names to be added to the `deriving` clause
+
+---
 
 ### Find-replace the current word within a code block
 
@@ -154,6 +160,8 @@ You can use it to rename a local binding (if the variable name is a unique strin
 **Notes:**
 
 * A code block is defined as a continuous list of non-blank lines.
+
+---
 
 ### Convert a text block to a list of strings
 
