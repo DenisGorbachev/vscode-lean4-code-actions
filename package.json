@@ -76,7 +76,7 @@
       },
       {
         "command": "lean4CodeActions.createNewFile",
-        "title": "Lean 4: Create a new type file"
+        "title": "Lean 4: Create a new file"
       },
       {
         "command": "lean4CodeActions.createFreewriteFile",
@@ -105,7 +105,7 @@
     "vscode:prepublish": "yarn run esbuild --minify",
     "vscode:package": "mkdir -p dist && vsce package --yarn -o dist/extension.vsix",
     "vscode:publish": "mkdir -p dist && vsce publish --yarn",
-    "deploy:local": "yarn package && code --install-extension dist/extension.vsix --force"
+    "deploy:local": "yarn vscode:package && code --install-extension dist/extension.vsix --force"
   },
   "devDependencies": {
     "@types/chai": "^4.3.1",

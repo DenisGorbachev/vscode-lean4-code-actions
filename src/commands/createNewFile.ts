@@ -55,10 +55,11 @@ async function getKeyword() {
 
 async function getNames(currentDocumentUri: Uri) {
   const currentDocumentNames = getLeanNamesFromUri(currentDocumentUri)
-  const namespace = toNamespace(currentDocumentNames)
-  const defaultName = 'NewType'
-  const value = namespace + leanNameSeparator + defaultName
-  const valueSelection: [number, number] = [namespace.length + 1, value.length]
+  const currentDocumentParentNames = currentDocumentNames.slice(0, -1)
+  const parentNamespace = toNamespace(currentDocumentParentNames)
+  const defaultName = 'New'
+  const value = parentNamespace + leanNameSeparator + defaultName
+  const valueSelection: [number, number] = [parentNamespace.length + 1, value.length]
   const result = await window.showInputBox({
     title: 'Fully qualified Lean name for new type',
     value,

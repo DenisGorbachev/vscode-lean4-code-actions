@@ -21,7 +21,7 @@ Note: a custom language configuration is available as [a separate extension](htt
 
 * [Auto-import a definition](#auto-import)
 * [Extract a definition to a separate file](#extract-a-definition-to-a-separate-file)
-* [Create a new type in a separate file](#create-a-new-type-in-a-separate-file)
+* [Create a new file](#create-a-new-file)
 * [Find-replace the current word within a code block](#find-replace-the-current-word-within-a-code-block)
 * [Convert a text block to a list of strings](#convert-a-text-block-to-a-list-of-strings)
 
@@ -104,7 +104,9 @@ namespace Author
 
 ---
 
-### Create a new type in a separate file
+### Create a new file
+
+<img src="./img/createNewFile.gif"/>
 
 **Before:**
 
