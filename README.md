@@ -102,7 +102,7 @@ namespace Author
 
 **Before:**
 
-(*Nothing*)
+(Nothing)
 
 **After:**
 
