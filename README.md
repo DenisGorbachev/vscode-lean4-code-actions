@@ -29,7 +29,7 @@ Note: a custom language configuration is available as [a separate extension](htt
 
 ### Auto-import
 
-<img src="./img/autoImport.gif"/>
+<img src="./img/autoImport.gif" />
 
 **Before:**
 
@@ -136,6 +136,8 @@ namespace User
 
 ### Find-replace the current word within a code block
 
+<img src="./img/rename.gif" />
+
 **Before:**
 
 ```lean
@@ -166,6 +168,8 @@ You can use it to rename a local binding (if the variable name is a unique strin
 ---
 
 ### Convert a text block to a list of strings
+
+<img src="./img/convertTextToList.gif" />
 
 **Before:**
 
