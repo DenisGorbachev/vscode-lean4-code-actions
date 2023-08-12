@@ -13,14 +13,14 @@
 ## Installation
 
 * [Install the extension](https://marketplace.visualstudio.com/items?itemName=denis-gorbachev.lean4-code-actions&ssr=false)
-* Add the keyboard shortcuts to [useful commands](#commands)
+* Add the keyboard shortcuts for [useful commands](#commands)
 
 Note: a custom language configuration is available as [a separate extension](https://github.com/DenisGorbachev/vscode-lean4-language-configuration).
 
 ## Commands
 
 * [Auto-import a definition](#auto-import)
-* [Extract definition to a separate file](#extract-definition-to-a-separate-file)
+* [Extract a definition to a separate file](#extract-a-definition-to-a-separate-file)
 * [Create a new type in a separate file](#create-a-new-type-in-a-separate-file)
 * [Find-replace the current word within a code block](#find-replace-the-current-word-within-a-code-block)
 * [Convert a text block to a list of strings](#convert-a-text-block-to-a-list-of-strings)
@@ -38,7 +38,7 @@ Ensure that you've read through the extensions guidelines and follow the best pr
 * [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
  -->
 
-### Extract definition to a separate file
+### Extract a definition to a separate file
 
 ✅ Works
 
