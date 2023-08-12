@@ -19,13 +19,43 @@ Note: a custom language configuration is available as [a separate extension](htt
 
 ## Commands
 
+* [Create a new file](#create-a-new-file)
 * [Auto-import a definition](#auto-import)
 * [Extract a definition to a separate file](#extract-a-definition-to-a-separate-file)
-* [Create a new file](#create-a-new-file)
 * [Find-replace the current word within a code block](#find-replace-the-current-word-within-a-code-block)
 * [Convert a text block to a list of strings](#convert-a-text-block-to-a-list-of-strings)
 
 **Disclaimer:** the commands currently operate directly on text. As such, they have many limitations - for example, sometimes they don't properly detect Lean names. We have plans to reimplement the commands as proper code actions within LSP that operate on `Syntax` instead of text.
+
+### Create a new file
+
+<img src="./img/createNewFile.gif"/>
+
+**Before:**
+
+(Nothing)
+
+**After:**
+
+File: `CodeActions/Test/CreateNewFile/User.lean`
+
+```lean
+namespace CodeActions.Test.CreateNewFile
+
+structure User where
+
+deriving Repr, Inhabited
+
+namespace User
+```
+
+**Configuration options:**
+
+* `lean4CodeActions.createNewFile.imports` - a list of Lean filenames to be imported
+* `lean4CodeActions.createNewFile.opens` - a list of Lean namespaces to be opened
+* `lean4CodeActions.createNewFile.derivings` - a list of Lean names to be added to the `deriving` clause
+
+---
 
 ### Auto-import
 
@@ -101,36 +131,6 @@ namespace Author
 **Gotchas:**
 
 * It doesn't add the `open` declaration yet
-
----
-
-### Create a new file
-
-<img src="./img/createNewFile.gif"/>
-
-**Before:**
-
-(Nothing)
-
-**After:**
-
-File: `CodeActions/Test/CreateNewFile/User.lean`
-
-```lean
-namespace CodeActions.Test.CreateNewFile
-
-structure User where
-
-deriving Repr, Inhabited
-
-namespace User
-```
-
-**Configuration options:**
-
-* `lean4CodeActions.createNewFile.imports` - a list of Lean filenames to be imported
-* `lean4CodeActions.createNewFile.opens` - a list of Lean namespaces to be opened
-* `lean4CodeActions.createNewFile.derivings` - a list of Lean names to be added to the `deriving` clause
 
 ---
 
