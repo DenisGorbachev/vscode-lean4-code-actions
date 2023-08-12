@@ -6,20 +6,20 @@ import { NewTypeKeyword, NewTypeKeywordSchema } from 'src/models/NewTypeKeyword'
 import { leanNameSeparator, toNamespace } from 'src/utils/Lean'
 import { createFileIfNotExists } from 'src/utils/WorkspaceEdit'
 import { getLeanNamesFromUri, getUriFromLeanNames } from 'src/utils/WorkspaceFolder'
-import { combineAllTrim } from 'src/utils/text'
+import { combineFileContent } from 'src/utils/text'
 import { ensureWorkspaceFolder } from 'src/utils/workspace'
 import { Uri, commands, window, workspace } from 'vscode'
 import { StaticQuickPickItem } from '../utils/QuickPickItem'
 import { ensureEditor } from '../utils/TextEditor'
 
-export async function createNewTypeFile() {
-  const config = workspace.getConfiguration('lean4CodeActions.createNewTypeFile')
+export async function createNewFile() {
+  const config = workspace.getConfiguration('lean4CodeActions.createNewFile')
   const editor = ensureEditor()
   const workspaceFolder = ensureWorkspaceFolder(editor.document.uri)
   const keyword = await getKeyword()
-  if (!keyword) return
+  if (keyword === undefined) return
   const names = await getNames(editor.document.uri)
-  if (!names) return
+  if (names === undefined) return
   const name = last(names)
   const parents = names.slice(0, -1)
   const imports = config.get<string[]>('imports', [])
@@ -31,7 +31,7 @@ export async function createNewTypeFile() {
   await commands.executeCommand('vscode.open', uri)
 }
 
-// async function getImportsOpensDerivingsOld(keyword: NewTypeKeyword, names: Name[]) {
+// async function getImportsOpensDerivingsViaSubcommands(keyword: NewTypeKeyword, names: Name[]) {
 //   const subcommand = executeSubcommandIfExists('lean4CodeActions.createNewType', keyword, names)
 //   const imports = (await subcommand<Imports>('getImports')) || []
 //   const opens = (await subcommand<Opens>('getOpens')) || []
@@ -39,13 +39,16 @@ export async function createNewTypeFile() {
 // }
 
 async function getKeyword() {
-  const keywordQuickPickItems = NewTypeKeywordSchema.options.map<StaticQuickPickItem<NewTypeKeyword>>(keyword => ({
+  const keywordQuickPickItems = NewTypeKeywordSchema.options.map<StaticQuickPickItem<NewTypeKeyword | null>>(keyword => ({
     label: keyword,
     value: keyword,
     picked: keyword === 'structure',
-  }))
+  })).concat({
+    label: '(none)',
+    value: null,
+  })
   const keywordResult = await window.showQuickPick(keywordQuickPickItems, {
-    title: 'Type keyword',
+    title: 'Pick a keyword for the definition',
   })
   return keywordResult && keywordResult.value
 }
@@ -66,13 +69,13 @@ async function getNames(currentDocumentUri: Uri) {
   return ensureNonEmptyArray(names)
 }
 
-export function getTypeFileContents(imports: string[], opens: string[], derivings: string[], keyword: NewTypeKeyword, parents: Name[], name: Name) {
+export function getTypeFileContents(imports: string[], opens: string[], derivings: string[], keyword: NewTypeKeyword | null, parents: Name[], name: Name) {
   const importsLines = imports.map(name => `import ${name}`)
   const opensLines = opens.length ? [`open ${opens.join(' ')}`] : []
   const parentNamespaceLines = [`namespace ${toNamespace(parents)}`]
   const typeLines = getTypeLines(derivings, keyword, name)
-  const childNamespaceLines = [`namespace ${name}`]
-  return combineAllTrim([
+  const childNamespaceLines = typeLines.length ? [`namespace ${name}`] : []
+  return combineFileContent([
     importsLines,
     opensLines,
     parentNamespaceLines,
@@ -89,7 +92,7 @@ function getImportLines(imports: Imports) {
   return imports.map(hieroname => `import ${toNamespace(hieroname)}`)
 }
 
-function getTypeLines(derivings: string[], keyword: NewTypeKeyword, name: Name) {
+function getTypeLines(derivings: string[], keyword: NewTypeKeyword | null, name: Name) {
   switch (keyword) {
     case 'structure':
     case 'inductive':
@@ -100,11 +103,14 @@ function getTypeLines(derivings: string[], keyword: NewTypeKeyword, name: Name) 
         derivings.length ? `deriving ${derivings.join(', ')}` : '',
       ]
     case 'abbrev':
+    case 'def':
       return [
         `${keyword} ${name} := sorry`,
         '',
         derivings.length ? `deriving instance ${derivings.join(', ')} for ${name}` : '',
       ]
+    case null:
+      return []
   }
 }
 

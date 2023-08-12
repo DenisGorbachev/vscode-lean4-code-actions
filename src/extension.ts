@@ -7,7 +7,7 @@ import { CompletionItem, CompletionItemKind, CompletionItemLabel, ExtensionConte
 import { autoImport } from './commands/autoImport'
 import { convertTextToList } from './commands/convertTextToList'
 import { createFreewriteFile } from './commands/createFreewriteFile'
-import { createNewTypeFile } from './commands/createNewTypeFile'
+import { createNewFile } from './commands/createNewFile'
 import { extractDefinitionToSeparateFile } from './commands/extractDefinitionToSeparateFile'
 import { provideRenameEdits } from './commands/renameLocalVariable'
 import { getNames, getNamespacesSegments } from './utils/Lean'
@@ -24,7 +24,7 @@ export function activate(context: ExtensionContext) {
 
   const extractDefinitionToSeparateFileCommand = commands.registerCommand('lean4CodeActions.extractDefinitionToSeparateFile', extractDefinitionToSeparateFile)
 
-  const createNewTypeFileCommand = commands.registerCommand('lean4CodeActions.createNewTypeFile', createNewTypeFile)
+  const createNewFileCommand = commands.registerCommand('lean4CodeActions.createNewFile', createNewFile)
 
   // const renameLocalVariableCommand = commands.registerCommand('lean4CodeActions.renameLocalVariable', renameLocalVariable)
 
@@ -168,7 +168,7 @@ export function activate(context: ExtensionContext) {
   context.subscriptions.push(convertTextToListCommand)
   context.subscriptions.push(autoImportCommand)
   context.subscriptions.push(extractDefinitionToSeparateFileCommand)
-  context.subscriptions.push(createNewTypeFileCommand)
+  context.subscriptions.push(createNewFileCommand)
   context.subscriptions.push(completions)
   if (config.get('registerRenameProvider')) {
     languages.registerRenameProvider({ language: 'lean4' }, { provideRenameEdits })

@@ -15,7 +15,7 @@
 * [Install the extension](https://marketplace.visualstudio.com/items?itemName=denis-gorbachev.lean4-code-actions&ssr=false)
 * Add the keyboard shortcuts for [useful commands](#commands)
 
-Note: a custom language configuration is available as [a separate extension](https://github.com/DenisGorbachev/vscode-lean4-language-configuration).
+Note: a custom language configuration is available as [a separate extension](https://github.com/DenisGorbachev/vscode-lean4-language-configuration#readme).
 
 ## Commands
 
@@ -122,9 +122,9 @@ namespace User
 
 **Configuration options:**
 
-* `lean4CodeActions.createNewTypeFile.imports` - a list of Lean filenames to be imported
-* `lean4CodeActions.createNewTypeFile.opens` - a list of Lean namespaces to be opened
-* `lean4CodeActions.createNewTypeFile.derivings` - a list of Lean names to be added to the `deriving` clause
+* `lean4CodeActions.createNewFile.imports` - a list of Lean filenames to be imported
+* `lean4CodeActions.createNewFile.opens` - a list of Lean namespaces to be opened
+* `lean4CodeActions.createNewFile.derivings` - a list of Lean names to be added to the `deriving` clause
 
 ### Find-replace the current word within a code block
 

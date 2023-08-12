@@ -8,7 +8,7 @@ import { ensureNames, toNamespace, toNamespaceDeclaration } from '../utils/Lean'
 import { cloneRegExp } from '../utils/RegExp'
 import { getCurrentCodeBlockAt } from '../utils/TextDocument'
 import { ensureEditor } from '../utils/TextEditor'
-import { Line, Segment, combineAllTrim } from '../utils/text'
+import { Line, Segment, combineFileContent } from '../utils/text'
 
 const getMatcher = (r: RegExp) => (text: string) => text.match(r)
 const getRegExpForLineStartingWith = (start: string) => new RegExp('^' + start + '.*', 'gm')
@@ -67,7 +67,7 @@ const getContent = (allImports: Line[], allOpens: Line[]) => (selection: string)
   segments.push([toNamespaceDeclaration(globalNames)])
   segments.push([selection.trim()])
   segments.push([toNamespaceDeclaration(localNames)])
-  return combineAllTrim(segments)
+  return combineFileContent(segments)
 }
 
 function getSecondStringWithoutSpaces(selection: string) {

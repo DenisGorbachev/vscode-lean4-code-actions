@@ -22,3 +22,5 @@ export const combineAll = joinAll(2)
 export const combineAllTrim = (segments: Segment[]) => combineAll(segments.map(trimEmpty)).trim()
 
 export const joinAllSegments = (segmentsArray: Segment[][]) => joinAll(2)(segmentsArray.flat())
+
+export const combineFileContent = (segments: Segment[]) => combineAllTrim(segments) + '\n'

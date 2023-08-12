@@ -7,6 +7,7 @@ export const NewTypeKeywordSchema = z.enum([
   'inductive',
   'class',
   'abbrev',
+  'def',
 ]).describe('NewTypeKeyword')
 
 export const NewTypeKeywordsSchema = getArraySchema(NewTypeKeywordSchema, identity)
