@@ -27,20 +27,76 @@ Note: a custom language configuration is available as [a separate extension](htt
 
 ### Auto-import
 
-✅ Works
+<img src="./img/autoImport.gif"/>
 
-If you execute this command with an empty selection (just a cursor on the name), then only the part captured by [`getWordRangeAtPosition`](https://code.visualstudio.com/api/references/vscode-api#TextDocument.getWordRangeAtPosition) will be used. To import a hierarchical name, select it fully, then execute the command.
+**Before:**
 
-<!-- ## Following extension guidelines
+```lean
+def x : Rat := 1.0
+```
 
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+**After:**
 
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
- -->
+```lean
+import Std.Data.Rat.Basic
+
+def x : Rat := 1.0
+```
+
+**Gotchas:**
+
+* If you execute this command with an empty selection (just a cursor on the name), then only the part captured by [`getWordRangeAtPosition`](https://code.visualstudio.com/api/references/vscode-api#TextDocument.getWordRangeAtPosition) will be used. To import a hierarchical name, select it fully, then execute the command.
 
 ### Extract a definition to a separate file
 
-✅ Works
+<img src="./img/extractDefinitionToSeparateFile.gif"/>
+
+**Before:**
+
+File: `CodeActions/Test/ExtractDefinition/Book.lean`
+
+```lean
+namespace CodeActions.Test.ExtractDefinition
+
+structure Author where
+  name : String
+
+structure Book where
+  authors : List Author 
+```
+
+**After:**
+
+File: `CodeActions/Test/ExtractDefinition/Book.lean`
+
+```lean
+import CodeActions.Test.ExtractDefinition.Author
+
+namespace CodeActions.Test.ExtractDefinition
+
+structure Book where
+  authors : List Author 
+```
+
+File: `CodeActions/Test/ExtractDefinition/Author.lean`
+
+```lean
+namespace CodeActions.Test.ExtractDefinition
+
+structure Author where
+  name : String
+
+namespace Author
+```
+
+**How it works:**
+
+* Extract a definition into a separate file
+* Add an import to the original file
+
+**Gotchas:**
+
+* It doesn't add the `open` declaration yet
 
 ### Create a new type in a separate file
 

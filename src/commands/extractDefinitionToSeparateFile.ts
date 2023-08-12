@@ -8,7 +8,7 @@ import { ensureNames, toNamespace, toNamespaceDeclaration } from '../utils/Lean'
 import { cloneRegExp } from '../utils/RegExp'
 import { getCurrentCodeBlockAt } from '../utils/TextDocument'
 import { ensureEditor } from '../utils/TextEditor'
-import { Line, Segment, combineAll } from '../utils/text'
+import { Line, Segment, combineAllTrim } from '../utils/text'
 
 const getMatcher = (r: RegExp) => (text: string) => text.match(r)
 const getRegExpForLineStartingWith = (start: string) => new RegExp('^' + start + '.*', 'gm')
@@ -39,10 +39,11 @@ export async function extractDefinitionToSeparateFile() {
   const content = getContent(allImports, allOpens)(blockText)(currentNames, selectionNames)
   const closestImportLastIndex = getLastIndexMatchBefore(importRegExp, document.offsetAt(editor.selection.active), textAll)
   const importInsertOffset = closestImportLastIndex ? closestImportLastIndex + 1 : 0
+  const importInsertSuffix = importInsertOffset === 0 ? '\n' : ''
   await withWorkspaceEdit(async edit => {
     edit.createFile(uri, { contents: Buffer.from(content) })
     edit.delete(document.uri, block)
-    edit.insert(document.uri, positionAt(importInsertOffset), `import ${toNamespace(fullNames)}\n`)
+    edit.insert(document.uri, positionAt(importInsertOffset), `import ${toNamespace(fullNames)}\n` + importInsertSuffix)
   })
   await commands.executeCommand('vscode.open', uri)
 }
@@ -66,7 +67,7 @@ const getContent = (allImports: Line[], allOpens: Line[]) => (selection: string)
   segments.push([toNamespaceDeclaration(globalNames)])
   segments.push([selection.trim()])
   segments.push([toNamespaceDeclaration(localNames)])
-  return combineAll(segments)
+  return combineAllTrim(segments)
 }
 
 function getSecondStringWithoutSpaces(selection: string) {

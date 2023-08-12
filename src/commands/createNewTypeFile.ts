@@ -1,5 +1,4 @@
 import { ensureNonEmptyArray } from 'libs/utils/array/ensureNonEmptyArray'
-import { trim } from 'libs/utils/array/trim'
 import { identity, last } from 'remeda'
 import { Name } from 'src/models/Lean/Name'
 import { Imports, Opens } from 'src/models/Lean/SyntaxNodes'
@@ -7,9 +6,8 @@ import { NewTypeKeyword, NewTypeKeywordSchema } from 'src/models/NewTypeKeyword'
 import { leanNameSeparator, toNamespace } from 'src/utils/Lean'
 import { createFileIfNotExists } from 'src/utils/WorkspaceEdit'
 import { getLeanNamesFromUri, getUriFromLeanNames } from 'src/utils/WorkspaceFolder'
-import { combineAll } from 'src/utils/text'
+import { combineAllTrim } from 'src/utils/text'
 import { ensureWorkspaceFolder } from 'src/utils/workspace'
-import { isEmpty } from 'voca'
 import { Uri, commands, window, workspace } from 'vscode'
 import { StaticQuickPickItem } from '../utils/QuickPickItem'
 import { ensureEditor } from '../utils/TextEditor'
@@ -74,14 +72,13 @@ export function getTypeFileContents(imports: string[], opens: string[], deriving
   const parentNamespaceLines = [`namespace ${toNamespace(parents)}`]
   const typeLines = getTypeLines(derivings, keyword, name)
   const childNamespaceLines = [`namespace ${name}`]
-  const linesArray = [
+  return combineAllTrim([
     importsLines,
     opensLines,
     parentNamespaceLines,
     typeLines,
     childNamespaceLines,
-  ].map(trim<string>(isEmpty))
-  return combineAll(linesArray).trim()
+  ])
 }
 
 function getOpenLines(opens: Opens) {
