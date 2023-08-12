@@ -91,8 +91,8 @@ namespace Author
 
 **How it works:**
 
-* Extract a definition into a separate file
-* Add an import to the original file
+* It extracts a definition into a separate file
+* It adds an import to the original file
 
 **Gotchas:**
 
@@ -100,17 +100,31 @@ namespace Author
 
 ### Create a new type in a separate file
 
-✅ Works
+**Before:**
 
-Configuration options:
+(*Nothing*)
+
+**After:**
+
+File: `CodeActions/Test/CreateNewFile/User.lean`
+
+```lean
+namespace CodeActions.Test.CreateNewFile
+
+structure User where
+
+deriving Repr, Inhabited
+
+namespace User
+```
+
+**Configuration options:**
 
 * `lean4CodeActions.createNewTypeFile.imports` - a list of Lean filenames to be imported
 * `lean4CodeActions.createNewTypeFile.opens` - a list of Lean namespaces to be opened
 * `lean4CodeActions.createNewTypeFile.derivings` - a list of Lean names to be added to the `deriving` clause
 
 ### Find-replace the current word within a code block
-
-✅ Works
 
 **Before:**
 
@@ -140,8 +154,6 @@ You can use it to rename a local binding (if the variable name is a unique strin
 * A code block is defined as a continuous list of non-blank lines.
 
 ### Convert a text block to a list of strings
-
-✅ Works
 
 **Before:**
 
