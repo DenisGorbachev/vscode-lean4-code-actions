@@ -25,6 +25,8 @@ Note: a custom language configuration is available as [a separate extension](htt
 * [Find-replace the current word within a code block](#find-replace-the-current-word-within-a-code-block)
 * [Convert a text block to a list of strings](#convert-a-text-block-to-a-list-of-strings)
 
+Disclaimer: the commands currently operate directly on text. As such, they have many limitations - for example, sometimes they don't properly detect Lean names. We have plans to reimplement the commands as proper code actions within LSP that operate on `Syntax` instead of text.
+
 ### Auto-import
 
 <img src="./img/autoImport.gif"/>
