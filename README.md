@@ -49,11 +49,15 @@ deriving Repr, Inhabited
 namespace User
 ```
 
+**Notes:**
+
+* This command supports adding `import`, `open` and `deriving instance` commands via configuration.
+
 **Configuration options:**
 
-* `lean4CodeActions.createNewFile.imports` - a list of Lean filenames to be imported
-* `lean4CodeActions.createNewFile.opens` - a list of Lean namespaces to be opened
-* `lean4CodeActions.createNewFile.derivings` - a list of Lean names to be added to the `deriving` clause
+* `lean4CodeActions.createNewFile.imports` - a list of Lean filenames to be imported.
+* `lean4CodeActions.createNewFile.opens` - a list of Lean namespaces to be opened.
+* `lean4CodeActions.createNewFile.derivings` - a list of Lean names to be derived.
 
 ---
 
@@ -130,7 +134,7 @@ namespace Author
 
 **Gotchas:**
 
-* It doesn't add the `open` declaration yet
+* It doesn't add the `open` command yet
 
 ---
 
