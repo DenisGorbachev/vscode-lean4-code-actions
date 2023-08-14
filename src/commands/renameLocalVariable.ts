@@ -1,5 +1,8 @@
+import { isDefined } from 'remeda'
+import { toArray } from 'src/utils/IterableIterator'
 import { escapeRegExp } from 'voca'
 import { CancellationToken, Position, TextDocument, WorkspaceEdit } from 'vscode'
+import { replaceAtMulti } from '../../libs/utils/string'
 import { getCurrentCodeBlockAt } from '../utils/TextDocument'
 
 // {
@@ -26,12 +29,25 @@ export async function provideRenameEdits(document: TextDocument, position: Posit
   const edit = new WorkspaceEdit()
   const blockRange = getCurrentCodeBlockAt(position, document)
   const blockText = getText(blockRange)
-  const wordRange = getWordRangeAtPosition(position)
-  const wordText = getText(wordRange)
-  const notPrecededByWordCharacter = '(?<!\\w)'
-  const notFollowedByWordCharacter = '(?!\\w)'
-  const regexp = new RegExp(notPrecededByWordCharacter + escapeRegExp(wordText) + notFollowedByWordCharacter, 'g')
-  const blockTextNew = blockText.replace(regexp, newName)
+  const oldNameRange = getWordRangeAtPosition(position)
+  const oldName = getText(oldNameRange)
+  const blockTextNew = replaceViaWordPattern(oldName, blockText, newName)
   edit.replace(document.uri, blockRange, blockTextNew)
   return edit
+}
+
+function replaceBetweenNonWordCharacterDelimiters(oldName: string, blockText: string, newName: string) {
+  const notPrecededByWordCharacter = '(?<!\\w)'
+  const notFollowedByWordCharacter = '(?!\\w)'
+  const regexp = new RegExp(notPrecededByWordCharacter + escapeRegExp(oldName) + notFollowedByWordCharacter, 'g')
+  return blockText.replace(regexp, newName)
+}
+
+function replaceViaWordPattern(oldName: string, blockText: string, newName: string) {
+  // NOTE: There is no way to get the wordPattern for the current language in VSCode, so we have to hardcode the RegExp here
+  const wordPattern = new RegExp('[^`~@$%^&*()\\-=+\\[{\\]}⟨⟩⦃⦄⟦⟧⟮⟯‹›\\\\|;:",/\\s]+', 'g')
+  const matches = blockText.matchAll(wordPattern)
+  const matchesArray = toArray(matches)
+  const indexes = matchesArray.filter(match => match[0] === oldName).map(match => match.index).filter(isDefined)
+  return replaceAtMulti(blockText, newName, indexes, oldName.length)
 }

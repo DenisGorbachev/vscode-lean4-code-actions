@@ -1,3 +1,4 @@
+import { longestCommonPrefix } from 'libs/utils/string'
 import { flatten, last, sortBy } from 'remeda'
 import { Name } from 'src/models/Lean/Name'
 import { toNames, toNamespace } from 'src/utils/Lean'
@@ -9,7 +10,6 @@ import { WorkspaceSymbol } from 'vscode-languageserver-types'
 import { GenericQuickPickItem } from '../utils/QuickPickItem'
 import { ensureEditor, getImportInsertPosition, getSelectedName } from '../utils/TextEditor'
 import { getLeanImportPathFromAbsoluteFilePath, getLeanNamesFromMaybeLakeRelativeFilePath, getRelativeFilePathFromAbsoluteFilePath } from '../utils/path'
-import { longestCommonPrefix } from '../utils/string'
 
 export async function autoImport() {
   const editor = ensureEditor()
