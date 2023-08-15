@@ -27,6 +27,10 @@ Note: a custom language configuration is available as [a separate extension](htt
 
 **Disclaimer:** the commands currently operate directly on text. As such, they have many limitations - for example, sometimes they don't properly detect Lean names. We have plans to reimplement the commands as proper code actions within LSP that operate on `Syntax` instead of text.
 
+## Related work
+
+* [Std](https://github.com/leanprover/std4) already contains some [code actions](https://github.com/leanprover/std4/tree/main/Std/CodeAction)
+
 ### Create a new file
 
 <img src="./img/createNewFile.gif"/>
