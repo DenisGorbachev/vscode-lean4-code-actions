@@ -51,3 +51,8 @@ export const getNamespacesSegments = (uri: Uri): Segment[] => {
 export function getRelativeFilePathFromLeanNames(names: Name[]) {
   return names.join(sep) + '.lean'
 }
+
+export const toolchainMarker = 'leanprover'
+
+export const packagesMarker = 'lake-packages'
+

@@ -1,5 +1,10 @@
 import { sep } from 'path'
 import { escapeRegExp } from 'voca'
+import { Location } from './Lean/Lsp/WorkspaceSymbol'
+
+export type AbsolutePath = string
+
+export type RelativePath = string
 
 const sepEsc = escapeRegExp(sep)
 
@@ -14,11 +19,22 @@ export function getLeanImportPathFromRelativeFilePath(path: string) {
   return path.replace(new RegExp(sep, 'g'), '.').replace('.lean', '')
 }
 
-export function getLeanNamesFromMaybeLakeRelativeFilePath(path: string) {
-  const splintersRaw = path.split(sep)
-  const splinters = splintersRaw[0] === 'lake-packages' ? splintersRaw.slice(2) : splintersRaw
+export function getLeanNamesFromWorkspaceSymbolFilePath(location: Location) {
+  const splinters = getLeanNameSplintersFromLocation(location)
   if (splinters.length) splinters[splinters.length - 1] = splinters[splinters.length - 1].replace('.lean', '')
   return splinters
+}
+
+function getLeanNameSplintersFromLocation(location: Location) {
+  const splinters = location.path.split(sep)
+  switch (location.type) {
+    case 'project':
+      return splinters
+    case 'package':
+      return splinters.slice(2)
+    case 'toolchain':
+      return splinters.slice(3)
+  }
 }
 
 export function getLeanImportPathFromAbsoluteFilePath(workspaceFolder: string, path: string) {
