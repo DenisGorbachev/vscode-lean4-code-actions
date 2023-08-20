@@ -27,6 +27,22 @@ Note: a custom language configuration is available as [a separate extension](htt
 
 **Disclaimer:** the commands currently operate directly on text. As such, they have many limitations - for example, sometimes they don't properly detect Lean names. We have plans to reimplement the commands as proper code actions within LSP that operate on `Syntax` instead of text.
 
+## Snippets
+
+* `imp` - expands to [configured imports](#lean4CodeActions.createNewFile.imports)
+* `op` - expands to [configured opens](#lean4CodeActions.createNewFile.opens)
+* `ns` - expands to `namespace ${currentFileName}`
+* `var` - expands to `variable (${name} : ${Type})`
+* `ind` - expands to `inductive` declaration
+* `struct` - expands to `structure` declaration
+* `cls` - expands to `class` declaration
+
+## Configuration options
+
+* <span id="lean4CodeActions.createNewFile.imports">`lean4CodeActions.createNewFile.imports`</span> - a list of Lean filenames to be imported.
+* <span id="lean4CodeActions.createNewFile.opens">`lean4CodeActions.createNewFile.opens`</span> - a list of Lean namespaces to be opened.
+* <span id="lean4CodeActions.createNewFile.derivings">`lean4CodeActions.createNewFile.derivings`</span> - a list of Lean names to be derived.
+
 ## Related work
 
 * [Std](https://github.com/leanprover/std4) already contains some [code actions](https://github.com/leanprover/std4/tree/main/Std/CodeAction)
@@ -55,13 +71,7 @@ namespace User
 
 **Notes:**
 
-* This command supports adding `import`, `open` and `deriving instance` commands via configuration.
-
-**Configuration options:**
-
-* `lean4CodeActions.createNewFile.imports` - a list of Lean filenames to be imported.
-* `lean4CodeActions.createNewFile.opens` - a list of Lean namespaces to be opened.
-* `lean4CodeActions.createNewFile.derivings` - a list of Lean names to be derived.
+* This command supports adding `import`, `open` and `deriving instance` commands via configuration (see [1](#lean4CodeActions.createNewFile.imports), [2](#lean4CodeActions.createNewFile.opens), [3](#lean4CodeActions.createNewFile.derivings)).
 
 ---
 

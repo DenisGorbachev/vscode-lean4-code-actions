@@ -3,7 +3,7 @@ import { sep } from 'path'
 import { HieroName } from 'src/models/Lean/HieroName'
 import { Name } from 'src/models/Lean/Name'
 import { Uri, workspace } from 'vscode'
-import { Segment } from './text'
+import { Line } from './text'
 
 export const leanNameSeparator = '.'
 
@@ -32,21 +32,12 @@ export const toString = (names: HieroName): string => names.join(leanNameSeparat
 
 export const toNamespace = (names: HieroName) => `namespace ${toString(names)}`
 
-export const getNamespacesSegments = (uri: Uri): Segment[] => {
+export const getNamespaceLines = (uri: Uri): Line[] => {
   const splinters = getNames(uri)
   if (!splinters) { return [] }
-  const segments: Segment[] = []
   const childName = splinters.pop()
-  const parentNames = splinters
-  if (parentNames.length) {
-    segments.push([toNamespace(parentNames)])
-  }
-  if (childName) {
-    segments.push([`structure ${childName} where`, 'deriving Repr, Inhabited, BEq, DecidableEq'])
-    segments.push([toNamespace([childName])])
-    // segments.push(['namespace Example'])
-  }
-  return segments
+  if (!childName) return []
+  return [toNamespace([childName])]
 }
 
 export function getRelativeFilePathFromLeanNames(names: Name[]) {

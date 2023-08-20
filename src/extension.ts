@@ -11,9 +11,8 @@ import { createNewFile } from './commands/createNewFile'
 import { extractDefinitionToSeparateFile } from './commands/extractDefinitionToSeparateFile'
 import { provideRenameEdits } from './commands/renameLocalVariable'
 import { getImportLinesFromStrings, getOpenLinesFromStrings } from './models/Lean/SyntaxNodes'
-import { getNames, getNamespacesSegments } from './utils/Lean'
+import { getNames, getNamespaceLines } from './utils/Lean'
 import { getDeclarationSnippetLines, getSnippetStringFromSnippetLines } from './utils/Lean/SnippetString'
-import { joinAllSegments } from './utils/text'
 
 export function activate(context: ExtensionContext) {
   const config = workspace.getConfiguration('lean4CodeActions')
@@ -71,16 +70,11 @@ export function activate(context: ExtensionContext) {
     }
   }
 
-  const getVariableShorthand = (uri: Uri) => {
+  const getVariableLines = (uri: Uri) => {
     const namespaces = getNames(uri)
-    if (!namespaces) { return }
     const typeName = namespaces.pop()
-    if (!typeName) {
-      window.showErrorMessage('Could not find a type name')
-      return
-    }
-    const varName = getShortNameFromType(typeName)
-    return `variable (${varName} : ${typeName})`
+    const varName = typeName && getShortNameFromType(typeName)
+    return [`variable (\${1:${varName}} : \${2:${typeName}})`]
   }
 
   const getShortNameFromType = (typeName: string) => {
@@ -136,14 +130,10 @@ export function activate(context: ExtensionContext) {
         const openLines = getOpenLinesFromStrings(opens)
         const imp = getCompletionItemITSL('imp', importLines)
         const op = getCompletionItemITSL('op', openLines)
-        const ns = getCompletionItemITS('ns', joinAllSegments([getNamespacesSegments(document.uri)]))
-        const nsgen = new CompletionItem('nsgen')
-        nsgen.insertText = joinAllSegments([[importLines], [openLines], getNamespacesSegments(document.uri)])
-        const cimp = new CompletionItem('cimp')
-        cimp.insertText = await getClipboardImportShorthand()
-        const variable = getCompletionItem('var')({
-          insertText: getVariableShorthand(document.uri),
-        })
+        const ns = getCompletionItemITSL('ns', getNamespaceLines(document.uri))
+        // const cimp = new CompletionItem('cimp')
+        // cimp.insertText = await getClipboardImportShorthand()
+        const variable = getCompletionItemITSL('var', getVariableLines(document.uri))
         const struct = getCompletionItemITSL('struct', getDeclarationSnippetLines(derivings, 'structure'))
         const ind = getCompletionItemITSL('ind', getDeclarationSnippetLines(derivings, 'inductive'))
         const cls = getCompletionItemITSL('cls', getDeclarationSnippetLines(derivings, 'class'))
@@ -151,8 +141,6 @@ export function activate(context: ExtensionContext) {
           imp,
           op,
           ns,
-          nsgen,
-          cimp,
           variable,
           struct,
           ind,
