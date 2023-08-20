@@ -29,8 +29,8 @@ Note: a custom language configuration is available as [a separate extension](htt
 
 ## Snippets
 
-* `imp` - expands to [configured imports](#lean4CodeActions.createNewFile.imports)
-* `op` - expands to [configured opens](#lean4CodeActions.createNewFile.opens)
+* `imp` - expands to [configured imports](#configuration-options)
+* `op` - expands to [configured opens](#configuration-options)
 * `ns` - expands to `namespace ${currentFileName}`
 * `var` - expands to `variable (${name} : ${Type})`
 * `ind` - expands to `inductive` declaration
@@ -39,9 +39,9 @@ Note: a custom language configuration is available as [a separate extension](htt
 
 ## Configuration options
 
-* <span id="lean4CodeActions.createNewFile.imports">`lean4CodeActions.createNewFile.imports`</span> - a list of Lean filenames to be imported.
-* <span id="lean4CodeActions.createNewFile.opens">`lean4CodeActions.createNewFile.opens`</span> - a list of Lean namespaces to be opened.
-* <span id="lean4CodeActions.createNewFile.derivings">`lean4CodeActions.createNewFile.derivings`</span> - a list of Lean names to be derived.
+* `lean4CodeActions.createNewFile.imports` - a list of Lean filenames to be imported.
+* `lean4CodeActions.createNewFile.opens` - a list of Lean namespaces to be opened.
+* `lean4CodeActions.createNewFile.derivings` - a list of Lean names to be derived.
 
 ## Related work
 
@@ -71,7 +71,7 @@ namespace User
 
 **Notes:**
 
-* This command supports adding `import`, `open` and `deriving instance` commands via configuration (see [1](#lean4CodeActions.createNewFile.imports), [2](#lean4CodeActions.createNewFile.opens), [3](#lean4CodeActions.createNewFile.derivings)).
+* This command supports adding `import`, `open` and `deriving instance` commands via [configuration](#configuration-options).
 
 ---
 
