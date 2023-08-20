@@ -3,18 +3,23 @@
 import * as path from 'path'
 import { identity, last } from 'remeda'
 import { kebabCase } from 'voca'
-import { CompletionItem, CompletionItemKind, CompletionItemLabel, ExtensionContext, Position, TextDocument, Uri, commands, env, languages, window, workspace } from 'vscode'
+import { CompletionItem, CompletionItemKind, CompletionItemLabel, ExtensionContext, Position, SnippetString, TextDocument, Uri, commands, env, languages, window, workspace } from 'vscode'
 import { autoImport } from './commands/autoImport'
 import { convertTextToList } from './commands/convertTextToList'
 import { createFreewriteFile } from './commands/createFreewriteFile'
 import { createNewFile } from './commands/createNewFile'
 import { extractDefinitionToSeparateFile } from './commands/extractDefinitionToSeparateFile'
 import { provideRenameEdits } from './commands/renameLocalVariable'
+import { getImportLinesFromStrings, getOpenLinesFromStrings } from './models/Lean/SyntaxNodes'
 import { getNames, getNamespacesSegments } from './utils/Lean'
+import { getDeclarationSnippetLines, getSnippetStringFromSnippetLines } from './utils/Lean/SnippetString'
 import { joinAllSegments } from './utils/text'
 
 export function activate(context: ExtensionContext) {
   const config = workspace.getConfiguration('lean4CodeActions')
+  const derivings = config.get<string[]>('createNewFile.derivings', [])
+  const imports = config.get<string[]>('createNewFile.imports', [])
+  const opens = config.get<string[]>('createNewFile.opens', [])
 
   const createFreewriteFileCommand = commands.registerCommand('lean4CodeActions.createFreewriteFile', createFreewriteFile)
 
@@ -102,31 +107,24 @@ export function activate(context: ExtensionContext) {
     return typeName.charAt(0).toLowerCase()
   }
 
-  const getCommonOpenNamespaces = () => ['Playbook', 'Std', 'Generic']
-
-  const getOpenCommand = () => `open ${getCommonOpenNamespaces().join(' ')}`
-
-  const getGenericImports = () => {
-    return [
-      [
-        'import Playbook.Std',
-        'import Playbook.Generic',
-      ],
-      [
-        getOpenCommand(),
-      ],
-    ]
-  }
-
   const getCompletionItem = (label: string | CompletionItemLabel, kind?: CompletionItemKind) => (props: Partial<CompletionItem>) => {
     const item = new CompletionItem(label, kind)
     return Object.assign(item, props)
   }
 
-  const getCompletionItemInsertText = (label: string | CompletionItemLabel, kind?: CompletionItemKind) => (insertText: string) => getCompletionItem(label, kind)({ insertText })
+  const getCompletionItemInsertText = (label: string | CompletionItemLabel, kind?: CompletionItemKind) => (insertText: string | SnippetString) => getCompletionItem(label, kind)({ insertText })
 
   const getCompletionItemInsertTextSimple = (label: string | CompletionItemLabel, insertText: string) => getCompletionItem(label)({ insertText })
+
+  const getCompletionItemInsertTextSnippet = (label: string | CompletionItemLabel, insertText: SnippetString) => getCompletionItem(label, CompletionItemKind.Snippet)({ insertText })
+
+  const getCompletionItemInsertTextSnippetLines = (label: string | CompletionItemLabel, lines: string[]) => getCompletionItem(label, CompletionItemKind.Snippet)({ insertText: getSnippetStringFromSnippetLines(lines) })
+
   const getCompletionItemITS = getCompletionItemInsertTextSimple
+
+  const getCompletionItemITN = getCompletionItemInsertTextSnippet
+
+  const getCompletionItemITSL = getCompletionItemInsertTextSnippetLines
 
   const completions = languages.registerCompletionItemProvider(
     {
@@ -134,31 +132,31 @@ export function activate(context: ExtensionContext) {
     },
     {
       async provideCompletionItems(document: TextDocument, position: Position) {
-        const gen = new CompletionItem('gen')
-        gen.insertText = joinAllSegments([getGenericImports()])
-        const ns = new CompletionItem('ns')
-        ns.insertText = joinAllSegments([getNamespacesSegments(document.uri)])
+        const importLines = getImportLinesFromStrings(imports)
+        const openLines = getOpenLinesFromStrings(opens)
+        const imp = getCompletionItemITSL('imp', importLines)
+        const op = getCompletionItemITSL('op', openLines)
+        const ns = getCompletionItemITS('ns', joinAllSegments([getNamespacesSegments(document.uri)]))
         const nsgen = new CompletionItem('nsgen')
-        nsgen.insertText = joinAllSegments([getGenericImports(), getNamespacesSegments(document.uri)])
-        const imp = new CompletionItem('imp')
-        imp.insertText = getImportShorthand(document.uri)
+        nsgen.insertText = joinAllSegments([[importLines], [openLines], getNamespacesSegments(document.uri)])
         const cimp = new CompletionItem('cimp')
         cimp.insertText = await getClipboardImportShorthand()
         const variable = getCompletionItem('var')({
           insertText: getVariableShorthand(document.uri),
         })
-        const open = getCompletionItemITS('open', getOpenCommand())
+        const struct = getCompletionItemITSL('struct', getDeclarationSnippetLines(derivings, 'structure'))
+        const ind = getCompletionItemITSL('ind', getDeclarationSnippetLines(derivings, 'inductive'))
+        const cls = getCompletionItemITSL('cls', getDeclarationSnippetLines(derivings, 'class'))
         return [
-          gen,
+          imp,
+          op,
           ns,
           nsgen,
-          imp,
           cimp,
           variable,
-          open,
-          // getCompletionItem('ind')({
-          // 	insertText: joinAllSegments([getInductiveSegments()])
-          // })
+          struct,
+          ind,
+          cls,
         ]
       },
     },

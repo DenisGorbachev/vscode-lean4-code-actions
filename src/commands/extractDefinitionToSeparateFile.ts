@@ -4,7 +4,7 @@ import { withWorkspaceEdit } from 'src/utils/WorkspaceEdit'
 import { getUriFromLeanNames } from 'src/utils/WorkspaceFolder'
 import { ensureWorkspaceFolder } from 'src/utils/workspace'
 import { commands } from 'vscode'
-import { ensureNames, toNamespace, toNamespaceDeclaration } from '../utils/Lean'
+import { ensureNames, toNamespace, toString } from '../utils/Lean'
 import { cloneRegExp } from '../utils/RegExp'
 import { getCurrentCodeBlockAt } from '../utils/TextDocument'
 import { ensureEditor } from '../utils/TextEditor'
@@ -43,7 +43,7 @@ export async function extractDefinitionToSeparateFile() {
   await withWorkspaceEdit(async edit => {
     edit.createFile(uri, { contents: Buffer.from(content) })
     edit.delete(document.uri, block)
-    edit.insert(document.uri, positionAt(importInsertOffset), `import ${toNamespace(fullNames)}\n` + importInsertSuffix)
+    edit.insert(document.uri, positionAt(importInsertOffset), `import ${toString(fullNames)}\n` + importInsertSuffix)
   })
   await commands.executeCommand('vscode.open', uri)
 }
@@ -64,9 +64,9 @@ const getContent = (allImports: Line[], allOpens: Line[]) => (selection: string)
   const segments: Segment[] = []
   segments.push(allImports)
   segments.push(allOpens)
-  segments.push([toNamespaceDeclaration(globalNames)])
+  segments.push([toNamespace(globalNames)])
   segments.push([selection.trim()])
-  segments.push([toNamespaceDeclaration(localNames)])
+  segments.push([toNamespace(localNames)])
   return combineFileContent(segments)
 }
 

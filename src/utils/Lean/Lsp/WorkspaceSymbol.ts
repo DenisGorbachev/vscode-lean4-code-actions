@@ -1,3 +1,4 @@
+import { sep } from 'path'
 import { packagesMarker, toolchainMarker } from 'src/utils/Lean'
 import { RelativePath } from 'src/utils/path'
 import { UriString } from '../../Uri'
@@ -10,7 +11,7 @@ export interface Location {
 }
 
 export function getLocationFromUri(workspaceFolder: UriString, uri: UriString): Location {
-  uri = uri.replace(workspaceFolder, '')
+  uri = uri.replace(workspaceFolder + sep, '')
   const toolchainMarkerIndex = uri.indexOf(toolchainMarker)
   if (~toolchainMarkerIndex) {
     return { type: 'toolchain', path: uri.substring(toolchainMarkerIndex) }
@@ -19,7 +20,7 @@ export function getLocationFromUri(workspaceFolder: UriString, uri: UriString): 
   if (~packagesMarkerIndex) {
     return { type: 'package', path: uri.substring(packagesMarkerIndex) }
   }
-  if (uri.indexOf('file://')) throw new Error(`Cannot parse symbol uri: ${uri}`)
+  if (~uri.indexOf('file://')) throw new Error(`Cannot parse symbol uri: ${uri}`)
   return { type: 'project', path: uri }
 }
 

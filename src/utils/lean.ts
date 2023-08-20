@@ -1,5 +1,6 @@
 import * as path from 'path'
 import { sep } from 'path'
+import { HieroName } from 'src/models/Lean/HieroName'
 import { Name } from 'src/models/Lean/Name'
 import { Uri, workspace } from 'vscode'
 import { Segment } from './text'
@@ -25,11 +26,11 @@ export const ensureNames = (uri: Uri) => {
   return namespaces
 }
 
-export const toNames = (namespace: string) => namespace.split(leanNameSeparator)
+export const toHieroName = (namespace: string): HieroName => namespace.split(leanNameSeparator)
 
-export const toNamespace = (names: string[]) => names.join(leanNameSeparator)
+export const toString = (names: HieroName): string => names.join(leanNameSeparator)
 
-export const toNamespaceDeclaration = (names: string[]) => `namespace ${toNamespace(names)}`
+export const toNamespace = (names: HieroName) => `namespace ${toString(names)}`
 
 export const getNamespacesSegments = (uri: Uri): Segment[] => {
   const splinters = getNames(uri)
@@ -38,11 +39,11 @@ export const getNamespacesSegments = (uri: Uri): Segment[] => {
   const childName = splinters.pop()
   const parentNames = splinters
   if (parentNames.length) {
-    segments.push([toNamespaceDeclaration(parentNames)])
+    segments.push([toNamespace(parentNames)])
   }
   if (childName) {
     segments.push([`structure ${childName} where`, 'deriving Repr, Inhabited, BEq, DecidableEq'])
-    segments.push([toNamespaceDeclaration([childName])])
+    segments.push([toNamespace([childName])])
     // segments.push(['namespace Example'])
   }
   return segments

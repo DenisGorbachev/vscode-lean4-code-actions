@@ -1,14 +1,16 @@
 import { ensureNonEmptyArray } from 'libs/utils/array/ensureNonEmptyArray'
 import { identity, last } from 'remeda'
 import { Name } from 'src/models/Lean/Name'
-import { Imports, Opens } from 'src/models/Lean/SyntaxNodes'
 import { NewTypeKeyword, NewTypeKeywordSchema } from 'src/models/NewTypeKeyword'
-import { leanNameSeparator, toNamespace } from 'src/utils/Lean'
+import { leanNameSeparator, toString } from 'src/utils/Lean'
+import { replaceSnippetVariables } from 'src/utils/SnippetString'
 import { createFileIfNotExists } from 'src/utils/WorkspaceEdit'
 import { getLeanNamesFromUri, getUriFromLeanNames } from 'src/utils/WorkspaceFolder'
-import { combineFileContent } from 'src/utils/text'
+import { combineFileContent, trimEmpty } from 'src/utils/text'
 import { ensureWorkspaceFolder } from 'src/utils/workspace'
 import { Uri, commands, window, workspace } from 'vscode'
+import { getImportLinesFromStrings, getOpenLinesFromStrings } from '../models/Lean/SyntaxNodes'
+import { getDeclarationSnippetLines } from '../utils/Lean/SnippetString'
 import { StaticQuickPickItem } from '../utils/QuickPickItem'
 import { ensureEditor } from '../utils/TextEditor'
 
@@ -56,7 +58,7 @@ async function getKeyword() {
 async function getNames(currentDocumentUri: Uri) {
   const currentDocumentNames = getLeanNamesFromUri(currentDocumentUri)
   const currentDocumentParentNames = currentDocumentNames.slice(0, -1)
-  const parentNamespace = toNamespace(currentDocumentParentNames)
+  const parentNamespace = toString(currentDocumentParentNames)
   const defaultName = 'New'
   const value = parentNamespace + leanNameSeparator + defaultName
   const valueSelection: [number, number] = [parentNamespace.length + 1, value.length]
@@ -71,61 +73,17 @@ async function getNames(currentDocumentUri: Uri) {
 }
 
 export function getTypeFileContents(imports: string[], opens: string[], derivings: string[], keyword: NewTypeKeyword | null, parents: Name[], name: Name) {
-  const importsLines = imports.map(name => `import ${name}`)
-  const opensLines = opens.length ? [`open ${opens.join(' ')}`] : []
-  const parentNamespaceLines = [`namespace ${toNamespace(parents)}`]
-  const typeLines = getTypeLines(derivings, keyword, name)
-  const childNamespaceLines = typeLines.length ? [`namespace ${name}`] : []
+  const importsLines = getImportLinesFromStrings(imports)
+  const opensLines = getOpenLinesFromStrings(opens)
+  const parentNamespaceLines = [`namespace ${toString(parents)}`]
+  const declarationSnippetLines = getDeclarationSnippetLines(derivings, keyword)
+  const declarationLines = trimEmpty(replaceSnippetVariables(['$1', name, '$1'])(declarationSnippetLines))
+  const childNamespaceLines = declarationLines.length ? [`namespace ${name}`] : []
   return combineFileContent([
     importsLines,
     opensLines,
     parentNamespaceLines,
-    typeLines,
+    declarationLines,
     childNamespaceLines,
   ])
 }
-
-function getOpenLines(opens: Opens) {
-  return opens.map(hieronames => `open ${hieronames.map(toNamespace).join(' ')}`)
-}
-
-function getImportLines(imports: Imports) {
-  return imports.map(hieroname => `import ${toNamespace(hieroname)}`)
-}
-
-function getTypeLines(derivings: string[], keyword: NewTypeKeyword | null, name: Name) {
-  switch (keyword) {
-    case 'structure':
-    case 'inductive':
-    case 'class':
-      return [
-        `${keyword} ${name} where`,
-        '',
-        derivings.length ? `deriving ${derivings.join(', ')}` : '',
-      ]
-    case 'abbrev':
-    case 'def':
-      return [
-        `${keyword} ${name} := sorry`,
-        '',
-        derivings.length ? `deriving instance ${derivings.join(', ')} for ${name}` : '',
-      ]
-    case null:
-      return []
-  }
-}
-
-const executeCommandsIfExist = async <T = unknown>(commands: string[], ...args: unknown[]): Promise<Array<T | undefined>> => {
-  const promises = commands.map(command => executeCommandIfExists<T>(command, ...args))
-  return Promise.all(promises)
-}
-
-const executeCommandIfExists = async <T = unknown>(command: string, ...args: unknown[]): Promise<T | undefined> => {
-  const commandNames = await commands.getCommands()
-  return commandNames.includes(command) ? commands.executeCommand(command) : undefined
-}
-
-const executeSubcommandIfExists = (commandPrefix: string, ...args: unknown[]) => async <T = unknown>(subcommand: string): Promise<T | undefined> => {
-  return executeCommandIfExists<T>(commandPrefix + '.' + subcommand, ...args)
-}
-

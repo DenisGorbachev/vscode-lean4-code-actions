@@ -1,7 +1,7 @@
 import { longestCommonPrefix } from 'libs/utils/string'
 import { flatten, last, sortBy } from 'remeda'
 import { Name } from 'src/models/Lean/Name'
-import { toNames, toNamespace } from 'src/utils/Lean'
+import { toHieroName, toString } from 'src/utils/Lean'
 import { Location, getLocationFromUri } from 'src/utils/Lean/Lsp/WorkspaceSymbol'
 import { LeanExports } from 'src/utils/LeanExtension'
 import { isZero } from 'src/utils/Position'
@@ -35,7 +35,7 @@ export async function autoImport() {
 }
 
 async function getQuickPickItemsFromWorkspaceFiles(name: string) {
-  const names = toNames(name)
+  const names = toHieroName(name)
   const lastName = last(names)
   if (!lastName) throw new Error(`Cannot parse Lean name: "${name}"`)
   const uris = await workspace.findFiles(`**/*${lastName}.lean`, '{build,lake-packages}')
@@ -98,7 +98,7 @@ async function getQuickPickItemsFromWorkspaceSymbols(query: string) {
       label: '$(symbol-constructor) ' + name,
       description: getWorkspaceSymbolDescription(location),
       picked: index === 0,
-      getValue: async () => toNamespace(getLeanNamesFromWorkspaceSymbolLocation(location)),
+      getValue: async () => toString(getLeanNamesFromWorkspaceSymbolLocation(location)),
     })
   })
 }
