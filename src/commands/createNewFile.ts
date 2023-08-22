@@ -1,4 +1,4 @@
-import { ensureNonEmptyArray } from 'libs/utils/array/ensureNonEmptyArray'
+import { ensureNonEmptyArray, isNonEmptyArray } from 'libs/utils/array/ensureNonEmptyArray'
 import { identity, last } from 'remeda'
 import { Name } from 'src/models/Lean/Name'
 import { NewTypeKeyword, NewTypeKeywordSchema } from 'src/models/NewTypeKeyword'
@@ -60,8 +60,8 @@ async function getNames(currentDocumentUri: Uri) {
   const currentDocumentParentNames = currentDocumentNames.slice(0, -1)
   const parentNamespace = toString(currentDocumentParentNames)
   const defaultName = 'New'
-  const value = parentNamespace + leanNameSeparator + defaultName
-  const valueSelection: [number, number] = [parentNamespace.length + 1, value.length]
+  const value = parentNamespace ? parentNamespace + leanNameSeparator + defaultName : defaultName
+  const valueSelection: [number, number] = [value.length - defaultName.length, value.length]
   const result = await window.showInputBox({
     title: 'Fully qualified Lean name for new type',
     value,
@@ -78,12 +78,12 @@ export function getTypeFileContents(imports: string[], opens: string[], deriving
   const parentNamespaceLines = [`namespace ${toString(parents)}`]
   const declarationSnippetLines = getDeclarationSnippetLines(derivings, keyword)
   const declarationLines = trimEmpty(replaceSnippetVariables(['$1', name, '$1'])(declarationSnippetLines))
-  const childNamespaceLines = declarationLines.length ? [`namespace ${name}`] : []
+  const childNamespaceLines = [`namespace ${name}`]
   return combineFileContent([
     importsLines,
     opensLines,
     parentNamespaceLines,
     declarationLines,
     childNamespaceLines,
-  ])
+  ].filter(isNonEmptyArray))
 }
