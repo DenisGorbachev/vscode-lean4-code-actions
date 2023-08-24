@@ -10,14 +10,14 @@ assignees: DenisGorbachev
 ## Goal
 Describe what you want to achieve.
 
-Example:
+_Example:_
 
 I'd like to calculate the average spend for a specific group of customers.
 
 ## How to achieve
 Describe how you would like to achieve the goal.
 
-Example:
+_Example:_
 
 1. Go to "Customers"
 1. Filter by age >= 25 && age < 35
