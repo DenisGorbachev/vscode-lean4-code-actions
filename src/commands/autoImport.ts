@@ -146,4 +146,3 @@ const getRankingFromPrecintType = (type: PrecintType) => {
     case 'toolchain': return 2
   }
 }
-
