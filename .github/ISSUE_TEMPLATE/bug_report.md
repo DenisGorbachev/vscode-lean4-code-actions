@@ -7,14 +7,16 @@ assignees: DenisGorbachev
 
 ---
 
-**Reproduction**
+## Reproduction
+
 1. Go to '...'
 2. Click on '....'
 3. Scroll down to '....'
 4. See error
 
-**Expected behavior**
+## Expected behavior
+
 A clear and concise description of what you expected to happen.
 
-**Screencast**
+## Screencast
 If applicable, please record a screencast using a native OS recorder or https://www.loom.com/
