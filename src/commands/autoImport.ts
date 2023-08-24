@@ -2,15 +2,22 @@ import { longestCommonPrefix } from 'libs/utils/string'
 import { flatten, last, sortBy } from 'remeda'
 import { Name } from 'src/models/Lean/Name'
 import { toHieroName, toString } from 'src/utils/Lean'
-import { Location, getLocationFromUri } from 'src/utils/Lean/Lsp/WorkspaceSymbol'
+import { Precint, PrecintType, getPrecintFromUri } from 'src/utils/Lean/Lsp/WorkspaceSymbol'
 import { LeanExports } from 'src/utils/LeanExtension'
 import { isZero } from 'src/utils/Position'
+import { UriString } from 'src/utils/Uri'
 import { ensureWorkspaceFolder } from 'src/utils/workspace'
 import { extensions, window, workspace } from 'vscode'
 import { WorkspaceSymbol } from 'vscode-languageserver-types'
-import { GenericQuickPickItem } from '../utils/QuickPickItem'
+import { StaticQuickPickItem } from '../utils/QuickPickItem'
 import { ensureEditor, getImportInsertPosition, getSelectedName } from '../utils/TextEditor'
-import { getLeanImportPathFromAbsoluteFilePath, getLeanNamesFromWorkspaceSymbolFilePath as getLeanNamesFromWorkspaceSymbolLocation, getRelativeFilePathFromAbsoluteFilePath } from '../utils/path'
+import { getLeanImportPathFromAbsoluteFilePath, getLeanNamesFromWorkspaceSymbolFilePath, getRelativeFilePathFromAbsoluteFilePath } from '../utils/path'
+
+interface AutoImportQuickPickValue {
+  title: string
+  uri: UriString
+  getValue: () => Promise<Name>
+}
 
 export async function autoImport() {
   const editor = ensureEditor()
@@ -26,7 +33,7 @@ export async function autoImport() {
     matchOnDescription: true,
   })
   if (!result) return // user cancelled the action
-  const leanImportPath = await result.getValue()
+  const leanImportPath = await result.value.getValue()
   const insertPosition = getImportInsertPosition(editor)
   editor.edit(editBuilder => {
     const suffix = isZero(insertPosition) ? '\n' : ''
@@ -35,16 +42,40 @@ export async function autoImport() {
 }
 
 async function getQuickPickItemsFromWorkspaceFiles(name: string) {
+  const editor = ensureEditor()
+  const documentUriStr = editor.document.uri.toString()
   const names = toHieroName(name)
   const lastName = last(names)
   if (!lastName) throw new Error(`Cannot parse Lean name: "${name}"`)
   const uris = await workspace.findFiles(`**/*${lastName}.lean`, '{build,lake-packages}')
-  return uris.map((uri, index): GenericQuickPickItem<Name> => {
+  const infosRaw = uris.map(uri => {
     const workspaceFolder = ensureWorkspaceFolder(uri)
+    const title = getRelativeFilePathFromAbsoluteFilePath(workspaceFolder.uri.fsPath, uri.fsPath)
+    const value = getLeanImportPathFromAbsoluteFilePath(workspaceFolder.uri.fsPath, uri.fsPath)
+    const uriStr = uri.toString()
+    return {
+      title,
+      uri: uriStr,
+      value,
+      closeness: longestCommonPrefix([documentUriStr, uriStr]).length,
+    }
+  })
+  const infos = sortBy(
+    infosRaw,
+    [i => i.closeness, 'desc'],
+    [i => i.title.length, 'asc'],
+    [i => i.uri, 'desc']
+  )
+  return infos.map((info, index): StaticQuickPickItem<AutoImportQuickPickValue> => {
+    const { title, uri, value } = info
     return ({
-      label: '$(file) ' + getRelativeFilePathFromAbsoluteFilePath(workspaceFolder.uri.fsPath, uri.fsPath),
+      label: '$(file) ' + title,
       picked: index === 0,
-      getValue: async () => getLeanImportPathFromAbsoluteFilePath(workspaceFolder.uri.fsPath, uri.fsPath),
+      value: {
+        title,
+        uri,
+        getValue: async () => value,
+      },
     })
   })
 }
@@ -52,7 +83,6 @@ async function getQuickPickItemsFromWorkspaceFiles(name: string) {
 const troubleshootLeanExtension = 'Troubleshoot: make sure that Lean server is running, make sure that Lean server has fully processed your file, try again.'
 
 async function getQuickPickItemsFromWorkspaceSymbols(query: string) {
-  const editor = ensureEditor()
   const leanExtensionId = 'leanprover.lean4'
   const leanExtension = extensions.getExtension(leanExtensionId)
   if (!leanExtension) throw new Error(`${leanExtensionId} extension is not available`)
@@ -60,6 +90,8 @@ async function getQuickPickItemsFromWorkspaceSymbols(query: string) {
   if (!clientProvider) throw new Error(`${leanExtensionId} clientProvider is not available. ${troubleshootLeanExtension}`)
   const client = clientProvider.getActiveClient()
   if (!client) throw new Error(`${leanExtensionId} getActiveClient() is not available. ${troubleshootLeanExtension}`)
+  const editor = ensureEditor()
+  const documentUriStr = editor.document.uri.toString()
   const workspaceFolder = ensureWorkspaceFolder(editor.document.uri)
   const workspaceFolderPath = workspaceFolder.uri.fsPath
   const workspaceFolderUriStr = workspaceFolder.uri.toString()
@@ -75,32 +107,43 @@ async function getQuickPickItemsFromWorkspaceSymbols(query: string) {
     }
   }) as WorkspaceSymbol[] | null
   if (!symbols) throw new Error('Received a null response from LSP')
-  const currentUriStr = editor.document.uri.toString()
-  const workspaceFolderStr = workspaceFolder.uri.toString()
   const symbolsAnchored = symbols.filter(({ name }) => name.endsWith(query))
   const infosRaw = symbolsAnchored.map(({ name, location }) => {
     return ({
       name,
       uri: location.uri,
-      closeness: longestCommonPrefix([currentUriStr, location.uri]).length,
+      precint: getPrecintFromUri(workspaceFolderUriStr, location.uri),
+      closeness: longestCommonPrefix([documentUriStr, location.uri]).length,
     })
   })
   const infos = sortBy(
     infosRaw,
     [i => i.closeness, 'desc'],
+    [i => getRankingFromPrecintType(i.precint.type), 'asc'],
     [i => i.name.startsWith(query), 'desc'],
-    [i => i.name.length, 'asc'],
-    [i => i.uri, 'desc']
+    [i => i.uri, 'asc']
   )
-  return infos.map(({ name, uri }, index): GenericQuickPickItem<Name> => {
-    const location = getLocationFromUri(workspaceFolderStr, uri)
+  return infos.map(({ name, uri, precint }, index): StaticQuickPickItem<AutoImportQuickPickValue> => {
     return ({
       label: '$(symbol-constructor) ' + name,
-      description: getWorkspaceSymbolDescription(location),
+      description: getWorkspaceSymbolDescription(precint),
       picked: index === 0,
-      getValue: async () => toString(getLeanNamesFromWorkspaceSymbolLocation(location)),
+      value: {
+        title: name,
+        uri,
+        getValue: async () => toString(getLeanNamesFromWorkspaceSymbolFilePath(precint)),
+      },
     })
   })
 }
 
-const getWorkspaceSymbolDescription = (location: Location) => location.path
+const getWorkspaceSymbolDescription = (precint: Precint) => precint.path
+
+const getRankingFromPrecintType = (type: PrecintType) => {
+  switch (type) {
+    case 'project': return 0
+    case 'package': return 1
+    case 'toolchain': return 2
+  }
+}
+

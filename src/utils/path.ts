@@ -1,6 +1,6 @@
 import { sep } from 'path'
 import { escapeRegExp } from 'voca'
-import { Location } from './Lean/Lsp/WorkspaceSymbol'
+import { Precint } from './Lean/Lsp/WorkspaceSymbol'
 
 export type AbsolutePath = string
 
@@ -19,13 +19,13 @@ export function getLeanImportPathFromRelativeFilePath(path: string) {
   return path.replace(new RegExp(sep, 'g'), '.').replace('.lean', '')
 }
 
-export function getLeanNamesFromWorkspaceSymbolFilePath(location: Location) {
+export function getLeanNamesFromWorkspaceSymbolFilePath(location: Precint) {
   const splinters = getLeanNameSplintersFromLocation(location)
   if (splinters.length) splinters[splinters.length - 1] = splinters[splinters.length - 1].replace('.lean', '')
   return splinters
 }
 
-function getLeanNameSplintersFromLocation(location: Location) {
+function getLeanNameSplintersFromLocation(location: Precint) {
   const splinters = location.path.split(sep)
   switch (location.type) {
     case 'project':

@@ -3,14 +3,14 @@ import { packagesMarker, toolchainMarker } from 'src/utils/Lean'
 import { RelativePath } from 'src/utils/path'
 import { UriString } from '../../Uri'
 
-export type LocationType = 'project' | 'package' | 'toolchain'
+export type PrecintType = 'project' | 'package' | 'toolchain'
 
-export interface Location {
-  type: LocationType
+export interface Precint {
+  type: PrecintType
   path: RelativePath
 }
 
-export function getLocationFromUri(workspaceFolder: UriString, uri: UriString): Location {
+export function getPrecintFromUri(workspaceFolder: UriString, uri: UriString): Precint {
   uri = uri.replace(workspaceFolder + sep, '')
   const toolchainMarkerIndex = uri.indexOf(toolchainMarker)
   if (~toolchainMarkerIndex) {
