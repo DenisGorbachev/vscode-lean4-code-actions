@@ -16,7 +16,8 @@ assignees: DenisGorbachev
 
 ## Expected behavior
 
-A clear and concise description of what you expected to happen.
+I expect to see ... on the screen.
 
 ## Screencast
-If applicable, please record a screencast using a native OS recorder or https://www.loom.com/
+
+(If applicable, please record a screencast using a native OS recorder or https://www.loom.com/)
