@@ -7,6 +7,7 @@ export interface StyleCharacterPair extends Pair<string> {
 
 export const pairs: StyleCharacterPair[] = [
   { style: 'explicit', left: '(', right: ')' },
-  { style: 'implicit', left: '{', right: '}' },
+  { style: 'implicitStrong', left: '{', right: '}' },
+  { style: 'implicitWeak', left: '⦃', right: '⦄' },
   { style: 'typeclass', left: '[', right: ']' },
 ]

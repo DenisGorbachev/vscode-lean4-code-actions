@@ -80,7 +80,7 @@
       },
       {
         "command": "lean4CodeActions.setArgumentStyle",
-        "title": "Lean 4: Set argument style (explicit, implicit, typeclass)"
+        "title": "Lean 4: Set argument style"
       },
       {
         "command": "lean4CodeActions.createFreewriteFile",

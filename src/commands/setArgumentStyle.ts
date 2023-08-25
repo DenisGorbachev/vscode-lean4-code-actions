@@ -18,10 +18,11 @@ export const setArgumentStyle = async () => {
   const { pair, rangeOuter, rangeInner } = info
   const textInner = document.getText(rangeInner)
   const textOuter = document.getText(rangeOuter)
-  const itemsRaw = getQuickPickItems(pairs)(textInner)
-  const items = markCurrentItem(itemsRaw, textOuter)
+  const items = getQuickPickItems(pairs)(textInner)
+  // const items = markCurrentItem(itemsRaw, textOuter)
   const item = await window.showQuickPick(items, {
     placeHolder: 'Pick the new argument style',
+    matchOnDescription: true,
   })
   if (!item) return
   await withWorkspaceEdit(async edit => {
@@ -67,14 +68,14 @@ const getQuickPickItems = (pairs: StyleCharacterPair[]) => (inner: string): Stat
   return pairs.map(pair => {
     const replacement = pair.left + inner + pair.right
     return ({
-      label: nameUpper[pair.style],
-      description: replacement,
+      label: replacement,
+      description: nameUpper[pair.style],
       value: replacement,
     })
   })
 }
 
-const markCurrentItem = (items: StaticQuickPickItem<string>[], value: string) => {
+const markCurrentItem = (value: string) => (items: StaticQuickPickItem<string>[]) => {
   return items.map(item => {
     if (item.value === value) {
       return { ...item, description: item.description + ' (current)' }

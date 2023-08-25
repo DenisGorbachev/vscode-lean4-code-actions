@@ -116,7 +116,7 @@ def x : Rat := 1.0
 
 **Notes:**
 
-* The command supports three argument styles: explicit, implicit, typeclass (`()`, `{}`, `[]`).
+* The command supports four argument styles: explicit, [implicit strong](https://leanprover.github.io/theorem_proving_in_lean4/dependent_type_theory.html#implicit-arguments), [implicit weak](https://leanprover.github.io/theorem_proving_in_lean4/interacting_with_lean.html?#more-on-implicit-arguments), [typeclass](https://leanprover.github.io/theorem_proving_in_lean4/type_classes.html) (`()`, `{}`, `⦃⦄`, `[]`).
 
 ---
 
