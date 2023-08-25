@@ -104,6 +104,8 @@ def x : Rat := 1.0
 
 <img src="./img/setArgumentStyle.gif" />
 
+**Before:**
+
 ```lean
 (α : Type u)
 ```
@@ -116,7 +118,7 @@ def x : Rat := 1.0
 
 **Notes:**
 
-* The command supports four argument styles: explicit, [implicit strong](https://leanprover.github.io/theorem_proving_in_lean4/dependent_type_theory.html#implicit-arguments), [implicit weak](https://leanprover.github.io/theorem_proving_in_lean4/interacting_with_lean.html?#more-on-implicit-arguments), [typeclass](https://leanprover.github.io/theorem_proving_in_lean4/type_classes.html) (`()`, `{}`, `⦃⦄`, `[]`).
+* The command supports four argument styles: [explicit](https://leanprover.github.io/theorem_proving_in_lean4/dependent_type_theory.html#function-abstraction-and-evaluation), [implicit strong](https://leanprover.github.io/theorem_proving_in_lean4/dependent_type_theory.html#implicit-arguments), [implicit weak](https://leanprover.github.io/theorem_proving_in_lean4/interacting_with_lean.html?#more-on-implicit-arguments), [typeclass](https://leanprover.github.io/theorem_proving_in_lean4/type_classes.html) (`()`, `{}`, `⦃⦄`, `[]`).
 
 ---
 
