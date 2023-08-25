@@ -79,6 +79,10 @@
         "title": "Lean 4: Create a new file"
       },
       {
+        "command": "lean4CodeActions.setArgumentStyle",
+        "title": "Lean 4: Set argument style (explicit, implicit, typeclass)"
+      },
+      {
         "command": "lean4CodeActions.createFreewriteFile",
         "title": "Lean 4: Create a freewrite file"
       },

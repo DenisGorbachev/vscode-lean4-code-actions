@@ -21,6 +21,7 @@ Note: a custom language configuration is available as [a separate extension](htt
 
 * [Create a new file](#create-a-new-file)
 * [Auto-import a definition](#auto-import)
+* [Set argument style](#set-argument-style)
 * [Extract a definition to a separate file](#extract-a-definition-to-a-separate-file)
 * [Find-replace the current word within a code block](#find-replace-the-current-word-within-a-code-block)
 * [Convert a text block to a list of strings](#convert-a-text-block-to-a-list-of-strings)
@@ -96,6 +97,26 @@ def x : Rat := 1.0
 **Gotchas:**
 
 * If you execute this command with an empty selection (just a cursor on the name), then only the part captured by [`getWordRangeAtPosition`](https://code.visualstudio.com/api/references/vscode-api#TextDocument.getWordRangeAtPosition) will be used. To import a hierarchical name, select it fully, then execute the command. Alternatively, you can enable detection of hierarchical names by installing [a custom language configuration](https://marketplace.visualstudio.com/items?itemName=denis-gorbachev.lean4-language-configuration).
+
+---
+
+### Set argument style
+
+<img src="./img/setArgumentStyle.gif" />
+
+```lean
+(α : Type u)
+```
+
+**After:**
+
+```lean
+{α : Type u}
+```
+
+**Notes:**
+
+* The command supports three argument styles: explicit, implicit, typeclass (`()`, `{}`, `[]`).
 
 ---
 
