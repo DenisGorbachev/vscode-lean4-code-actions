@@ -2,7 +2,7 @@
   "name": "lean4-code-actions",
   "displayName": "Lean 4 Code Actions",
   "description": "Refactorings and snippets for Lean 4",
-  "version": "1.1.14",
+  "version": "1.1.15",
   "license": "MIT",
   "publisher": "denis-gorbachev",
   "repository": {
