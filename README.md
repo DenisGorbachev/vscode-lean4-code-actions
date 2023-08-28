@@ -149,14 +149,11 @@ namespace CodeActions.Test.UpdateImports.Parent
 def y : Nat := 2 * Child.x
 ```
 
-**Gotchas:**
-
-* It doesn't update the namespaces (should be done manually).
-
 **Notes:**
 
 * This is a listener, not a command - it is executed automatically upon a file rename. It works even if you rename a file via another extension ([File Utils](https://marketplace.visualstudio.com/items?itemName=sleistner.vscode-fileutils), [File Bunny](https://marketplace.visualstudio.com/items?itemName=robole.file-bunny)).
-* You can disable this listener by setting `lean4CodeActions.updateImportsOnFileRename` to `false`
+* It doesn't update the namespaces (should be done manually).
+* It can be disabled by setting `lean4CodeActions.updateImportsOnFileRename` to `false`
 
 ---
 
