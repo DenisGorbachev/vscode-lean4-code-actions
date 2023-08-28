@@ -13,14 +13,15 @@
 ## Installation
 
 * [Install the extension](https://marketplace.visualstudio.com/items?itemName=denis-gorbachev.lean4-code-actions&ssr=false)
-* Add the keyboard shortcuts for [useful commands](#commands)
+* Add the keyboard shortcuts for [useful actions](#actions)
 
 Note: a custom language configuration is available as [a separate extension](https://github.com/DenisGorbachev/vscode-lean4-language-configuration#readme).
 
-## Commands
+## Actions
 
 * [Create a new file](#create-a-new-file)
 * [Auto-import a definition](#auto-import)
+* [Update imports on rename](#update-imports-on-rename)
 * [Set argument style](#set-argument-style)
 * [Extract a definition to a separate file](#extract-a-definition-to-a-separate-file)
 * [Find-replace the current word within a code block](#find-replace-the-current-word-within-a-code-block)
@@ -40,6 +41,8 @@ Note: a custom language configuration is available as [a separate extension](htt
 
 ## Configuration options
 
+* `lean4CodeActions.registerRenameProvider` - use this extension as a rename provider for `.lean` files
+* `lean4CodeActions.updateImportsOnFileRename` - update imports in other files when a file is renamed
 * `lean4CodeActions.createNewFile.imports` - a list of Lean filenames to be imported.
 * `lean4CodeActions.createNewFile.opens` - a list of Lean namespaces to be opened.
 * `lean4CodeActions.createNewFile.derivings` - a list of Lean names to be derived.
@@ -97,6 +100,63 @@ def x : Rat := 1.0
 **Gotchas:**
 
 * If you execute this command with an empty selection (just a cursor on the name), then only the part captured by [`getWordRangeAtPosition`](https://code.visualstudio.com/api/references/vscode-api#TextDocument.getWordRangeAtPosition) will be used. To import a hierarchical name, select it fully, then execute the command. Alternatively, you can enable detection of hierarchical names by installing [a custom language configuration](https://marketplace.visualstudio.com/items?itemName=denis-gorbachev.lean4-language-configuration).
+
+---
+
+### Update imports on rename
+
+<img src="./img/updateImports.gif" />
+
+When you rename a file (or move it to another folder), it updates the imports in other files.
+
+**Before:**
+
+File 1: `CodeActions/Test/UpdateImports/Child.lean`
+
+```lean
+namespace CodeActions.Test.UpdateImports.Child
+
+def x : Nat := 1
+```
+
+File 2: `CodeActions/Test/UpdateImports/Parent.lean`
+
+```lean
+import CodeActions.Test.UpdateImports.Child
+
+namespace CodeActions.Test.UpdateImports.Parent
+
+def y : Nat := 2 * Child.x
+```
+
+**After:**
+
+File 1: `CodeActions/Test/UpdateImports/Nested/RenamedChild.lean`
+
+```lean
+namespace CodeActions.Test.UpdateImports.Child
+
+def x : Nat := 1
+```
+
+File 2: `CodeActions/Test/UpdateImports/Parent.lean`
+
+```lean
+import CodeActions.Test.UpdateImports.Nested.RenamedChild
+
+namespace CodeActions.Test.UpdateImports.Parent
+
+def y : Nat := 2 * Child.x
+```
+
+**Gotchas:**
+
+* It doesn't update the namespaces (should be done manually).
+
+**Notes:**
+
+* This is a listener, not a command - it is executed automatically upon a file rename. It works even if you rename a file via another extension ([File Utils](https://marketplace.visualstudio.com/items?itemName=sleistner.vscode-fileutils), [File Bunny](https://marketplace.visualstudio.com/items?itemName=robole.file-bunny)).
+* You can disable this listener by setting `lean4CodeActions.updateImportsOnFileRename` to `false`
 
 ---
 

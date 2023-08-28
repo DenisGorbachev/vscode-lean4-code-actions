@@ -3,9 +3,8 @@ import { sep } from 'path'
 import { HieroName } from 'src/models/Lean/HieroName'
 import { Name } from 'src/models/Lean/Name'
 import { Uri, workspace } from 'vscode'
-import { Line } from './text'
-
-export const leanNameSeparator = '.'
+import { toString } from '../../models/Lean/HieroName'
+import { Line } from '../text'
 
 export const getNames = (uri: Uri) => {
   const workspaceFolder = workspace.getWorkspaceFolder(uri)
@@ -25,10 +24,6 @@ export const ensureNames = (uri: Uri) => {
   if (!namespaces) { throw new Error(`Cannot extract names from uri: "${uri}"`) }
   return namespaces
 }
-
-export const toHieroName = (namespace: string): HieroName => namespace.split(leanNameSeparator)
-
-export const toString = (names: HieroName): string => names.join(leanNameSeparator)
 
 export const toNamespace = (names: HieroName) => `namespace ${toString(names)}`
 

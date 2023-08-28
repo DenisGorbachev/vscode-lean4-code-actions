@@ -1,7 +1,7 @@
 import { longestCommonPrefix } from 'libs/utils/string'
 import { flatten, last, sortBy } from 'remeda'
+import { toHieroName, toString } from 'src/models/Lean/HieroName'
 import { Name } from 'src/models/Lean/Name'
-import { toHieroName, toString } from 'src/utils/Lean'
 import { Precint, PrecintType, getPrecintFromUri } from 'src/utils/Lean/Lsp/WorkspaceSymbol'
 import { LeanExports } from 'src/utils/LeanExtension'
 import { isZero } from 'src/utils/Position'
@@ -41,7 +41,7 @@ export async function autoImport() {
   })
 }
 
-async function getQuickPickItemsFromWorkspaceFiles(name: string) {
+const getQuickPickItemsFromWorkspaceFiles = async (name: string) => {
   const editor = ensureEditor()
   const documentUriStr = editor.document.uri.toString()
   const names = toHieroName(name)

@@ -37,6 +37,11 @@
           "type": "boolean",
           "default": true
         },
+        "lean4CodeActions.updateImportsOnFileRename": {
+          "markdownDescription": "Update imports in other files when a file is renamed **(restart required)**",
+          "type": "boolean",
+          "default": true
+        },
         "lean4CodeActions.createNewFile.imports": {
           "markdownDescription": "Imports that should be added to every new type file",
           "type": "array",

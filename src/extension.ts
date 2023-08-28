@@ -9,9 +9,10 @@ import { convertTextToList } from './commands/convertTextToList'
 import { createFreewriteFile } from './commands/createFreewriteFile'
 import { createNewFile } from './commands/createNewFile'
 import { extractDefinitionToSeparateFile } from './commands/extractDefinitionToSeparateFile'
-import { provideRenameEdits } from './commands/renameLocalVariable'
 import { setArgumentStyle } from './commands/setArgumentStyle'
+import { onDidRenameFiles } from './listeners/onDidRenameFiles'
 import { getImportLinesFromStrings, getOpenLinesFromStrings } from './models/Lean/SyntaxNodes'
+import { provideRenameEdits } from './providers/providerRenameEdits'
 import { getNames, getNamespaceLines } from './utils/Lean'
 import { getDeclarationSnippetLines, getSnippetStringFromSnippetLines } from './utils/Lean/SnippetString'
 
@@ -162,6 +163,9 @@ export function activate(context: ExtensionContext) {
   context.subscriptions.push(completions)
   if (config.get('registerRenameProvider')) {
     languages.registerRenameProvider({ language: 'lean4' }, { provideRenameEdits })
+  }
+  if (config.get('updateImportsOnFileRename')) {
+    workspace.onDidRenameFiles(onDidRenameFiles)
   }
 }
 

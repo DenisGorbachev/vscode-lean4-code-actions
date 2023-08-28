@@ -6,8 +6,8 @@ import { withWorkspaceEdit } from 'src/utils/WorkspaceEdit'
 import { indexOf, lastIndexOf } from 'voca'
 import { TextEditor, window } from 'vscode'
 import { Pair } from '../../libs/utils/Pair'
+import { StyleCharacterPair, pairs } from '../utils/Lean/StyleCharacterPair'
 import { getRangeFromOffsets } from '../utils/Range'
-import { StyleCharacterPair, pairs } from './StyleCharacterPair'
 
 export const setArgumentStyle = async () => {
   const editor = ensureEditor()

@@ -1,4 +1,4 @@
-import { toString } from 'src/utils/Lean'
+import { toString } from 'src/models/Lean/HieroName'
 import { HieroName } from './HieroName'
 
 export type Imports = HieroName[]

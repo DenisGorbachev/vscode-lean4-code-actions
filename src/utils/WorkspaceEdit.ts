@@ -1,4 +1,4 @@
-import { Uri, WorkspaceEdit, workspace } from 'vscode'
+import { CancellationToken, Uri, WorkspaceEdit, workspace } from 'vscode'
 
 export const createFileIfNotExists = async (
   uri: Uri,
@@ -11,8 +11,10 @@ export const createFileIfNotExists = async (
   edit.createFile(uri, { contents: Buffer.from(contents), ...options })
 })
 
-export const withWorkspaceEdit = async (callback: (edit: WorkspaceEdit) => Promise<void>) => {
+export const withWorkspaceEdit = async (callback: (edit: WorkspaceEdit) => Promise<void>, cancellationToken?: CancellationToken) => {
   const edit = new WorkspaceEdit()
   await callback(edit)
-  await workspace.applyEdit(edit)
+  if (!cancellationToken?.isCancellationRequested) {
+    await workspace.applyEdit(edit)
+  }
 }
