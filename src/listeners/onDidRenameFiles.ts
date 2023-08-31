@@ -5,6 +5,7 @@ import { getRangeFromOffsetAndLength } from 'src/utils/Range'
 import { withWorkspaceEdit } from 'src/utils/WorkspaceEdit'
 import { getLeanImportPathFromAbsoluteFilePath } from 'src/utils/path'
 import { FileRename } from 'src/utils/vscode/FileRename'
+import { escapeRegExp } from 'voca'
 import { FileRenameEvent, ProgressLocation, window, workspace } from 'vscode'
 
 interface HieroRename {
@@ -40,9 +41,12 @@ export const onDidRenameFiles = async (event: FileRenameEvent) => {
           const { oldName, newName } = rename
           const oldImport = `import ${oldName}`
           const newImport = `import ${newName}`
-          const oldImportIndex = text.indexOf(oldImport)
-          if (~oldImportIndex) {
-            const range = getRange(oldImportIndex, oldImport.length)
+          const oldImportRegExp = new RegExp('^' + escapeRegExp(oldImport) + '$', 'gm')
+          const matches = text.matchAll(oldImportRegExp)
+          for (const match of matches) {
+            const { index } = match
+            if (index === undefined) continue
+            const range = getRange(index, oldImport.length)
             edit.replace(uri, range, newImport)
           }
         }
