@@ -12,15 +12,16 @@ import { Uri, commands, window, workspace } from 'vscode'
 import { getImportLinesFromStrings, getOpenLinesFromStrings } from '../models/Lean/SyntaxNodes'
 import { getDeclarationSnippetLines } from '../utils/Lean/SnippetString'
 import { StaticQuickPickItem } from '../utils/QuickPickItem'
-import { ensureEditor } from '../utils/TextEditor'
+import { ensureEditor, getSelectionText } from '../utils/TextEditor'
 
 export async function createNewFile() {
   const config = workspace.getConfiguration('lean4CodeActions.createNewFile')
   const editor = ensureEditor()
   const workspaceFolder = ensureWorkspaceFolder(editor.document.uri)
+  const newName = getSelectionText(editor) ?? 'New'
   const keyword = await getKeyword()
   if (keyword === undefined) return
-  const names = await getNames(editor.document.uri)
+  const names = await getNames(newName, editor.document.uri)
   if (names === undefined) return
   const name = last(names)
   const parents = names.slice(0, -1)
@@ -55,13 +56,12 @@ async function getKeyword() {
   return keywordResult && keywordResult.value
 }
 
-async function getNames(currentDocumentUri: Uri) {
+async function getNames(newName: string, currentDocumentUri: Uri) {
   const currentDocumentNames = getLeanNamesFromUri(currentDocumentUri)
-  const currentDocumentParentNames = currentDocumentNames.slice(0, -1)
-  const parentNamespace = toString(currentDocumentParentNames)
-  const defaultName = 'New'
-  const value = parentNamespace ? parentNamespace + leanNameSeparator + defaultName : defaultName
-  const valueSelection: [number, number] = [value.length - defaultName.length, value.length]
+  // const currentDocumentParentNames = currentDocumentNames.slice(0, -1)
+  const parentNamespace = toString(currentDocumentNames)
+  const value = parentNamespace ? parentNamespace + leanNameSeparator + newName : newName
+  const valueSelection: [number, number] = [value.length - newName.length, value.length]
   const result = await window.showInputBox({
     title: 'Fully qualified Lean name for new type',
     value,

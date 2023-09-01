@@ -24,7 +24,7 @@ export const onDidRenameFiles = async (event: FileRenameEvent) => {
   return window.withProgress({
     cancellable: true,
     location: ProgressLocation.Notification,
-    title: 'Updating imports...',
+    title: 'Updating imports',
   }, (progress, cancellationToken) => {
     return withWorkspaceEdit(async edit => {
       const total = uris.length

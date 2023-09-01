@@ -11,11 +11,15 @@ export function getDeclarationSnippetLines(derivings: string[], keyword: NewType
         derivings.length ? `deriving ${derivings.join(', ')}` : '',
       ]
     case 'structure':
-    case 'class':
       return [
         `${keyword} \${1:Name} where`,
         '  ${0}',
         derivings.length ? `deriving ${derivings.join(', ')}` : '',
+      ]
+    case 'class':
+      return [
+        `${keyword} \${1:Name} where`,
+        '  ${0}',
       ]
     case 'abbrev':
     case 'def':

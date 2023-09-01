@@ -22,7 +22,8 @@ export const getSelectionText = (editor: TextEditor) => {
   const { document, selection } = editor
   const { getText, getWordRangeAtPosition } = document
   if (selection.isEmpty) {
-    return getText(getWordRangeAtPosition(selection.active))
+    const wordRange = getWordRangeAtPosition(selection.active)
+    return wordRange ? getText(wordRange) : undefined
   } else {
     return getText(editor.selection)
   }
