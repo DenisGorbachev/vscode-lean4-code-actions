@@ -1,11 +1,13 @@
 import { trim } from 'libs/utils/array/trim'
-import { isEmpty } from 'voca'
 
 export type Line = string
 
 export type Segment = Line[]
 
-export const trimEmpty = trim<string>(isEmpty)
+/**
+ * Trim strings that are `Or ZeroLength WhitespaceOnly`
+ */
+export const trimEmpty = trim<string>(s => !s.trim().length)
 
 export const join = (count: number = 1) => (lines: string[]) => lines.join('\n'.repeat(count))
 

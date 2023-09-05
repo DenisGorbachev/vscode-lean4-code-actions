@@ -58,8 +58,8 @@ async function getKeyword() {
 
 async function getNames(newName: string, currentDocumentUri: Uri) {
   const currentDocumentNames = getLeanNamesFromUri(currentDocumentUri)
-  // const currentDocumentParentNames = currentDocumentNames.slice(0, -1)
-  const parentNamespace = toString(currentDocumentNames)
+  const currentDocumentParentNames = currentDocumentNames.slice(0, -1)
+  const parentNamespace = toString(currentDocumentParentNames)
   const value = parentNamespace ? parentNamespace + leanNameSeparator + newName : newName
   const valueSelection: [number, number] = [value.length - newName.length, value.length]
   const result = await window.showInputBox({
@@ -81,8 +81,8 @@ export function getTypeFileContents(imports: string[], opens: string[], deriving
   const childNamespaceLines = [`namespace ${name}`]
   return combineFileContent([
     importsLines,
-    opensLines,
     parentNamespaceLines,
+    opensLines,
     declarationLines,
     childNamespaceLines,
   ].filter(isNonEmptyArray))
