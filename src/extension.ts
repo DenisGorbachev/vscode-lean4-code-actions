@@ -18,9 +18,6 @@ import { getDeclarationSnippetLines, getSnippetStringFromSnippetLines } from './
 
 export function activate(context: ExtensionContext) {
   const config = workspace.getConfiguration('lean4CodeActions')
-  const derivings = config.get<string[]>('createNewFile.derivings', [])
-  const imports = config.get<string[]>('createNewFile.imports', [])
-  const opens = config.get<string[]>('createNewFile.opens', [])
 
   const createFreewriteFileCommand = commands.registerCommand('lean4CodeActions.createFreewriteFile', createFreewriteFile)
 
@@ -130,6 +127,11 @@ export function activate(context: ExtensionContext) {
     },
     {
       async provideCompletionItems(document: TextDocument, position: Position) {
+        // need to get fresh config values here because they might have been changed by the user after the extension was activated
+        const config = workspace.getConfiguration('lean4CodeActions')
+        const derivings = config.get<string[]>('createNewFile.derivings', [])
+        const imports = config.get<string[]>('createNewFile.imports', [])
+        const opens = config.get<string[]>('createNewFile.opens', [])
         const importLines = getImportLinesFromStrings(imports)
         const openLines = getOpenLinesFromStrings(opens)
         const imp = getCompletionItemITSL('imp', importLines)
