@@ -8,6 +8,7 @@ import { autoImport } from './commands/autoImport'
 import { convertTextToList } from './commands/convertTextToList'
 import { createFreewriteFile } from './commands/createFreewriteFile'
 import { createNewFile } from './commands/createNewFile'
+import { createNewFileSet } from './commands/createNewFileSet'
 import { extractDefinitionToSeparateFile } from './commands/extractDefinitionToSeparateFile'
 import { setArgumentStyle } from './commands/setArgumentStyle'
 import { onDidRenameFiles } from './listeners/onDidRenameFiles'
@@ -28,6 +29,8 @@ export function activate(context: ExtensionContext) {
   const extractDefinitionToSeparateFileCommand = commands.registerCommand('lean4CodeActions.extractDefinitionToSeparateFile', extractDefinitionToSeparateFile)
 
   const createNewFileCommand = commands.registerCommand('lean4CodeActions.createNewFile', createNewFile)
+
+  const createNewFileSetCommand = commands.registerCommand('lean4CodeActions.createNewFileSet', createNewFileSet)
 
   const setArgumentStyleCommand = commands.registerCommand('lean4CodeActions.setArgumentStyle', setArgumentStyle)
 
@@ -161,6 +164,7 @@ export function activate(context: ExtensionContext) {
   context.subscriptions.push(autoImportCommand)
   context.subscriptions.push(extractDefinitionToSeparateFileCommand)
   context.subscriptions.push(createNewFileCommand)
+  context.subscriptions.push(createNewFileSetCommand)
   context.subscriptions.push(setArgumentStyleCommand)
   context.subscriptions.push(completions)
   if (config.get('registerRenameProvider')) {

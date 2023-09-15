@@ -4,11 +4,12 @@ import { leanNameSeparator, toString } from 'src/models/Lean/HieroName'
 import { Name } from 'src/models/Lean/Name'
 import { NewTypeKeyword, NewTypeKeywordSchema } from 'src/models/NewTypeKeyword'
 import { replaceSnippetVariables } from 'src/utils/SnippetString'
+import { CreateFileConfig } from 'src/utils/WorkspaceConfiguration/CreateFileConfig'
 import { createFileIfNotExists } from 'src/utils/WorkspaceEdit'
 import { getLeanNamesFromUri, getUriFromLeanNames } from 'src/utils/WorkspaceFolder'
-import { combineFileContent, trimEmpty } from 'src/utils/text'
+import { Line, combineFileContent, trimEmpty } from 'src/utils/text'
 import { ensureWorkspaceFolder } from 'src/utils/workspace'
-import { Uri, commands, window, workspace } from 'vscode'
+import { TextEditor, Uri, commands, window, workspace } from 'vscode'
 import { getImportLinesFromStrings, getOpenLinesFromStrings } from '../models/Lean/SyntaxNodes'
 import { getDeclarationSnippetLines } from '../utils/Lean/SnippetString'
 import { StaticQuickPickItem } from '../utils/QuickPickItem'
@@ -18,10 +19,9 @@ export async function createNewFile() {
   const config = workspace.getConfiguration('lean4CodeActions.createNewFile')
   const editor = ensureEditor()
   const workspaceFolder = ensureWorkspaceFolder(editor.document.uri)
-  const newName = getSelectionText(editor) ?? 'New'
   const keyword = await getKeyword()
   if (keyword === undefined) return
-  const names = await getNames(newName, editor.document.uri)
+  const names = await getNamesFromEditor(editor)
   if (names === undefined) return
   const name = last(names)
   const parents = names.slice(0, -1)
@@ -29,9 +29,14 @@ export async function createNewFile() {
   const opens = config.get<string[]>('opens', [])
   const derivings = config.get<string[]>('derivings', [])
   const uri = getUriFromLeanNames(workspaceFolder, names)
-  const contents = getTypeFileContents(imports, opens, derivings, keyword, parents, name)
+  const contents = getTypeFileContents(imports, opens, derivings)(keyword, parents, name)
   await createFileIfNotExists(uri, contents)
   await commands.executeCommand('vscode.open', uri)
+}
+
+export const getNamesFromEditor = async (editor: TextEditor) => {
+  const newName = getSelectionText(editor) ?? 'New'
+  return getNames(newName, editor.document.uri)
 }
 
 // async function getImportsOpensDerivingsViaSubcommands(keyword: NewTypeKeyword, names: Name[]) {
@@ -56,7 +61,7 @@ async function getKeyword() {
   return keywordResult && keywordResult.value
 }
 
-async function getNames(newName: string, currentDocumentUri: Uri) {
+export async function getNames(newName: string, currentDocumentUri: Uri) {
   const currentDocumentNames = getLeanNamesFromUri(currentDocumentUri)
   const currentDocumentParentNames = currentDocumentNames.slice(0, -1)
   const parentNamespace = toString(currentDocumentParentNames)
@@ -72,18 +77,24 @@ async function getNames(newName: string, currentDocumentUri: Uri) {
   return ensureNonEmptyArray(names)
 }
 
-export function getTypeFileContents(imports: string[], opens: string[], derivings: string[], keyword: NewTypeKeyword | null, parents: Name[], name: Name) {
+export const getTypeFileContentsC = (config: CreateFileConfig) => getTypeFileContents(config.imports, config.opens, config.derivings)
+
+export const wrapFileContents = (imports: string[], opens: string[]) => (parents: Name[], name: Name) => (contentsLines: Line[]) => {
   const importsLines = getImportLinesFromStrings(imports)
-  const opensLines = getOpenLinesFromStrings(opens)
   const parentNamespaceLines = [`namespace ${toString(parents)}`]
-  const declarationSnippetLines = getDeclarationSnippetLines(derivings, keyword)
-  const declarationLines = trimEmpty(replaceSnippetVariables(['$1', name, '$1'])(declarationSnippetLines))
+  const opensLines = getOpenLinesFromStrings(opens)
   const childNamespaceLines = [`namespace ${name}`]
   return combineFileContent([
     importsLines,
     parentNamespaceLines,
     opensLines,
-    declarationLines,
+    contentsLines,
     childNamespaceLines,
   ].filter(isNonEmptyArray))
+}
+
+export const getTypeFileContents = (imports: string[], opens: string[], derivings: string[]) => (keyword: NewTypeKeyword | null, parents: Name[], name: Name) => {
+  const declarationSnippetLines = getDeclarationSnippetLines(derivings, keyword)
+  const declarationLines = trimEmpty(replaceSnippetVariables(['$1', name, '$1'])(declarationSnippetLines))
+  return wrapFileContents(imports, opens)(parents, name)(declarationLines)
 }
