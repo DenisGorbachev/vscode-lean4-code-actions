@@ -82,7 +82,8 @@ export function activate(context: ExtensionContext) {
   }
 
   const getShortNameFromType = (typeName: string) => {
-    return last(kebabCase(typeName).split('-'))
+    const typeNameNoVersion = typeName.replace(/V\d+$/, '')
+    return last(kebabCase(typeNameNoVersion).split('-'))
   }
 
   const getShortNameFromTypeSpec = ($words: [string, ...string[]]) => {
