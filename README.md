@@ -34,6 +34,7 @@ Note: a custom language configuration is available as [a separate extension](htt
 * `imp` - expands to [configured imports](#configuration-options)
 * `op` - expands to [configured opens](#configuration-options)
 * `ns` - expands to `namespace ${currentFileName}`
+* `nsp` - expands to `namespace ${currentFilePath}`
 * `var` - expands to `variable (${name} : ${Type})`
 * `ind` - expands to `inductive` declaration
 * `struct` - expands to `structure` declaration
@@ -43,6 +44,7 @@ Note: a custom language configuration is available as [a separate extension](htt
 
 * `lean4CodeActions.registerRenameProvider` - use this extension as a rename provider for `.lean` files
 * `lean4CodeActions.updateImportsOnFileRename` - update imports in other files when a file is renamed
+* `lean4CodeActions.namespace.prefix` - a prefix for top-level namespaces in generated code (added as `${prefix}.${body}`)
 * `lean4CodeActions.createNewFile.imports` - a list of Lean filenames to be imported.
 * `lean4CodeActions.createNewFile.opens` - a list of Lean namespaces to be opened.
 * `lean4CodeActions.createNewFile.derivings` - a list of Lean names to be derived.

@@ -17,11 +17,12 @@ export async function createNewFileSet() {
   const names = await getNamesFromEditor(editor)
   if (names === undefined) return
   const mainUri = getUriFromLeanNames(workspaceFolder, names)
-  await withWorkspaceEdit(async edit => {
+  const result = await withWorkspaceEdit(async edit => {
     createDataFile(workspaceFolder, config)(names)(edit)
     createLawsFile(workspaceFolder, config)(names)(edit)
     createMainFile(workspaceFolder, config)(names)(edit)
   })
+  if (result === false) throw new Error('Edit could not be applied; maybe some files from the set already exist')
   await commands.executeCommand('vscode.open', mainUri)
 }
 

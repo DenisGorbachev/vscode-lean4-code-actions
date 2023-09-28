@@ -1,5 +1,5 @@
 import { ensureNonEmptyArray, isNonEmptyArray } from 'libs/utils/array/ensureNonEmptyArray'
-import { identity, last } from 'remeda'
+import { concat, identity, last } from 'remeda'
 import { leanNameSeparator, toString } from 'src/models/Lean/HieroName'
 import { Name } from 'src/models/Lean/Name'
 import { NewTypeKeyword, NewTypeKeywordSchema } from 'src/models/NewTypeKeyword'
@@ -24,7 +24,7 @@ export async function createNewFile() {
   const names = await getNamesFromEditor(editor)
   if (names === undefined) return
   const name = last(names)
-  const parents = names.slice(0, -1)
+  const parents = withNamespacePrefix(names.slice(0, -1))
   const imports = config.get<string[]>('imports', [])
   const opens = config.get<string[]>('opens', [])
   const derivings = config.get<string[]>('derivings', [])
@@ -32,6 +32,13 @@ export async function createNewFile() {
   const contents = getTypeFileContents(imports, opens, derivings)(keyword, parents, name)
   await createFileIfNotExists(uri, contents)
   await commands.executeCommand('vscode.open', uri)
+}
+
+const withNamespacePrefix = (names: Name[]) => {
+  const namespaceConfig = workspace.getConfiguration('lean4CodeActions.namespace')
+  const prefix = namespaceConfig.get<string>('prefix')
+  if (!prefix) return names
+  return concat(prefix.split(leanNameSeparator), names)
 }
 
 export const getNamesFromEditor = async (editor: TextEditor) => {

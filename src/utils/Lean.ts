@@ -4,6 +4,7 @@ import { HieroName } from 'src/models/Lean/HieroName'
 import { Name } from 'src/models/Lean/Name'
 import { Uri, workspace } from 'vscode'
 import { toString } from '../models/Lean/HieroName'
+import { getLeanNamesFromUri } from './WorkspaceFolder'
 import { Line } from './text'
 
 export const getNames = (uri: Uri) => {
@@ -27,12 +28,14 @@ export const ensureNames = (uri: Uri) => {
 
 export const toNamespace = (names: HieroName) => `namespace ${toString(names)}`
 
-export const getNamespaceLines = (uri: Uri): Line[] => {
-  const splinters = getNames(uri)
-  if (!splinters) { return [] }
-  const childName = splinters.pop()
-  if (!childName) return []
-  return [toNamespace([childName])]
+export const getNamespaceLinesFromFileName = (uri: Uri): Line[] => {
+  const names = getLeanNamesFromUri(uri)
+  return [toNamespace(names.slice(-1))]
+}
+
+export const getNamespaceLinesFromFilePath = (uri: Uri): Line[] => {
+  const names = getLeanNamesFromUri(uri)
+  return [toNamespace(names.slice(0, -1))]
 }
 
 export function getRelativeFilePathFromLeanNames(names: Name[]) {

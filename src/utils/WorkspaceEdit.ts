@@ -14,7 +14,6 @@ export const createFileIfNotExists = async (
 export const withWorkspaceEdit = async (callback: (edit: WorkspaceEdit) => Promise<void>, cancellationToken?: CancellationToken) => {
   const edit = new WorkspaceEdit()
   await callback(edit)
-  if (!cancellationToken?.isCancellationRequested) {
-    await workspace.applyEdit(edit)
-  }
+  if (cancellationToken?.isCancellationRequested) return undefined
+  return workspace.applyEdit(edit)
 }

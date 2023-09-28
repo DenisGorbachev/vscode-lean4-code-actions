@@ -14,7 +14,7 @@ import { setArgumentStyle } from './commands/setArgumentStyle'
 import { onDidRenameFiles } from './listeners/onDidRenameFiles'
 import { getImportLinesFromStrings, getOpenLinesFromStrings } from './models/Lean/SyntaxNodes'
 import { provideRenameEdits } from './providers/providerRenameEdits'
-import { getNames, getNamespaceLines } from './utils/Lean'
+import { getNames, getNamespaceLinesFromFileName, getNamespaceLinesFromFilePath } from './utils/Lean'
 import { getDeclarationSnippetLines, getSnippetStringFromSnippetLines } from './utils/Lean/SnippetString'
 
 export function activate(context: ExtensionContext) {
@@ -95,11 +95,10 @@ export function activate(context: ExtensionContext) {
   const toUpperCaseFirstLetter = (input: string) => {
     if (input.length === 0) {
       return input
-    } else {
-      const firstLetter = input.charAt(0).toUpperCase()
-      const restOfWord = input.slice(1)
-      return firstLetter + restOfWord
     }
+    const firstLetter = input.charAt(0).toUpperCase()
+    const restOfWord = input.slice(1)
+    return firstLetter + restOfWord
   }
 
   const getOneLetterNameFromType = (typeName: string) => {
@@ -138,23 +137,17 @@ export function activate(context: ExtensionContext) {
         const opens = config.get<string[]>('createNewFile.opens', [])
         const importLines = getImportLinesFromStrings(imports)
         const openLines = getOpenLinesFromStrings(opens)
-        const imp = getCompletionItemITSL('imp', importLines)
-        const op = getCompletionItemITSL('op', openLines)
-        const ns = getCompletionItemITSL('ns', getNamespaceLines(document.uri))
         // const cimp = new CompletionItem('cimp')
         // cimp.insertText = await getClipboardImportShorthand()
-        const variable = getCompletionItemITSL('var', getVariableLines(document.uri))
-        const struct = getCompletionItemITSL('struct', getDeclarationSnippetLines(derivings, 'structure'))
-        const ind = getCompletionItemITSL('ind', getDeclarationSnippetLines(derivings, 'inductive'))
-        const cls = getCompletionItemITSL('cls', getDeclarationSnippetLines(derivings, 'class'))
         return [
-          imp,
-          op,
-          ns,
-          variable,
-          struct,
-          ind,
-          cls,
+          (getCompletionItemITSL('imp', importLines)),
+          (getCompletionItemITSL('op', openLines)),
+          (getCompletionItemITSL('ns', getNamespaceLinesFromFileName(document.uri))),
+          (getCompletionItemITSL('nsp', getNamespaceLinesFromFilePath(document.uri))),
+          (getCompletionItemITSL('var', getVariableLines(document.uri))),
+          (getCompletionItemITSL('struct', getDeclarationSnippetLines(derivings, 'structure'))),
+          (getCompletionItemITSL('ind', getDeclarationSnippetLines(derivings, 'inductive'))),
+          (getCompletionItemITSL('cls', getDeclarationSnippetLines(derivings, 'class'))),
         ]
       },
     },
