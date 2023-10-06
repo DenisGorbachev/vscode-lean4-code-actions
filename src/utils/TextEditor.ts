@@ -1,3 +1,4 @@
+import { leanNameSeparator } from 'src/models/Lean/HieroName'
 import { Position, TextEditor, window } from 'vscode'
 import { lastOfIterator } from './IterableIterator'
 
@@ -29,13 +30,21 @@ export const getSelectionText = (editor: TextEditor) => {
   }
 }
 
+export const getSelectedNames = (editor: TextEditor) => {
+  const text = getSelectionText(editor)
+  if (text === undefined) return
+  return text.split(leanNameSeparator)
+}
+
+/** TODO
+ *  * Options
+ *    * Implement a real parser for Lean name
+ *    * Get the name-under-cursor from LSP
+ */
 export const getSelectedName = (editor: TextEditor) => {
-  /** TODO
-   *  * Options
-   *    * Implement a real parser for Lean name
-   *    * Get the name-under-cursor from LSP
-   */
-  return getSelectionText(editor)
+  const names = getSelectedNames(editor)
+  if (names === undefined) return
+  return names[0]
 }
 
 export async function deleteSelection(editor: TextEditor) {

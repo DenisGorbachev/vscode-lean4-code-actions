@@ -14,3 +14,10 @@ export const getAbsoluteFilePathFromRelativeFilePath = (uri: Uri, path: Relative
   return workspaceFolder.uri.fsPath + sep + path
 }
 
+export const appendPath = (uri: Uri, path: string) => uri.with({ path: uri.path + path })
+
+export const getRelativePathFromUri = (uri: Uri) => {
+  const workspaceFolder = ensureWorkspaceFolder(uri)
+  return uri.fsPath.substring(workspaceFolder.uri.fsPath.length)
+}
+

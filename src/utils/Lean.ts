@@ -1,7 +1,5 @@
 import * as path from 'path'
-import { sep } from 'path'
 import { HieroName } from 'src/models/Lean/HieroName'
-import { Name } from 'src/models/Lean/Name'
 import { Uri, workspace } from 'vscode'
 import { toString } from '../models/Lean/HieroName'
 import { getLeanNamesFromUri } from './WorkspaceFolder'
@@ -36,10 +34,6 @@ export const getNamespaceLinesFromFileName = (uri: Uri): Line[] => {
 export const getNamespaceLinesFromFilePath = (uri: Uri): Line[] => {
   const names = getLeanNamesFromUri(uri)
   return [toNamespace(names.slice(0, -1))]
-}
-
-export function getRelativeFilePathFromLeanNames(names: Name[]) {
-  return names.join(sep) + '.lean'
 }
 
 export const toolchainMarker = 'leanprover'

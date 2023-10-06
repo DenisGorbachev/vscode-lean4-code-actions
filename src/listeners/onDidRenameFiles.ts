@@ -1,4 +1,5 @@
 import { isDefined } from 'remeda'
+import { exclude } from 'src/constants'
 import { HieroName, toString } from 'src/models/Lean/HieroName'
 import { HieroNameString } from 'src/models/Lean/HieroNameString'
 import { getRangeFromOffsetAndLength } from 'src/utils/Range'
@@ -19,7 +20,7 @@ interface HieroStringRename {
 }
 
 export const onDidRenameFiles = async (event: FileRenameEvent) => {
-  const uris = await workspace.findFiles('**/*.lean', '{build,lake-packages}')
+  const uris = await workspace.findFiles('**/*.lean', exclude)
   const renames = event.files.map(toRename).filter(isDefined)
   return window.withProgress({
     cancellable: true,

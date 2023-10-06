@@ -8,13 +8,13 @@ import { ensureWorkspaceFolder } from 'src/utils/workspace'
 import { WorkspaceEdit, WorkspaceFolder, commands } from 'vscode'
 import { ensureEditor } from '../utils/TextEditor'
 import { CreateFileConfig, getCreateFileConfig } from '../utils/WorkspaceConfiguration/CreateFileConfig'
-import { getNamesFromEditor, getTypeFileContentsC, wrapFileContents } from './createNewFile'
+import { askNamesFromEditor, getTypeFileContentsCV1, wrapFileContentsV1 } from './createNewFile'
 
 export async function createNewFileSet() {
   const config = getCreateFileConfig('lean4CodeActions.createNewFile')
   const editor = ensureEditor()
   const workspaceFolder = ensureWorkspaceFolder(editor.document.uri)
-  const names = await getNamesFromEditor(editor)
+  const names = await askNamesFromEditor(editor)
   if (names === undefined) return
   const mainUri = getUriFromLeanNames(workspaceFolder, names)
   const result = await withWorkspaceEdit(async edit => {
@@ -28,7 +28,7 @@ export async function createNewFileSet() {
 
 const createDataFile = (workspaceFolder: WorkspaceFolder, config: CreateFileConfig) => (parents: NonEmptyArray<Name>) => (edit: WorkspaceEdit) => {
   const name = 'Data'
-  const contents = getTypeFileContentsC(config)('structure', parents, name)
+  const contents = getTypeFileContentsCV1(config)('structure', parents, name)
   createFileFromNames(workspaceFolder, edit, parents, name, contents)
 }
 
@@ -41,7 +41,7 @@ const createLawsFile = (workspaceFolder: WorkspaceFolder, config: CreateFileConf
   ]
   const imports = [...config.imports, toString([...parents, 'Data'])]
   const opens = config.opens
-  const contents = wrapFileContents(imports, opens)(parents, name)(declarationLines)
+  const contents = wrapFileContentsV1(imports, opens)(parents, name)(declarationLines)
   createFileFromNames(workspaceFolder, edit, parents, name, contents)
 }
 
@@ -60,7 +60,7 @@ const createMainFile = (workspaceFolder: WorkspaceFolder, config: CreateFileConf
   ]
   const imports = [...config.imports, toString([...names, 'Data']), toString([...names, 'Laws'])]
   const opens = config.opens
-  const contents = wrapFileContents(imports, opens)(parents, name)(declarationLines)
+  const contents = wrapFileContentsV1(imports, opens)(parents, name)(declarationLines)
   createFileFromNames(workspaceFolder, edit, parents, name, contents)
 }
 

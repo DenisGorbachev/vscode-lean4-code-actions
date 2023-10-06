@@ -1,35 +1,43 @@
 import { ensureNonEmptyArray, isNonEmptyArray } from 'libs/utils/array/ensureNonEmptyArray'
-import { concat, identity, last } from 'remeda'
+import path from 'path'
+import { concat, identity } from 'remeda'
+import { FileBrand, FileBrandSchema } from 'src/models/FileBrand'
+import { FileContentVariety } from 'src/models/FileContentVariety'
+import { FileInfo, getFileInfo } from 'src/models/FileInfo'
+import { getRelativeFilePathFromFileInfo } from 'src/models/Filename'
 import { leanNameSeparator, toString } from 'src/models/Lean/HieroName'
-import { Name } from 'src/models/Lean/Name'
+import { Name, splitNames } from 'src/models/Lean/Name'
 import { NewTypeKeyword, NewTypeKeywordSchema } from 'src/models/NewTypeKeyword'
 import { replaceSnippetVariables } from 'src/utils/SnippetString'
+import { appendPath, getRelativePathFromUri } from 'src/utils/Uri'
 import { CreateFileConfig } from 'src/utils/WorkspaceConfiguration/CreateFileConfig'
 import { createFileIfNotExists } from 'src/utils/WorkspaceEdit'
-import { getLeanNamesFromUri, getUriFromLeanNames } from 'src/utils/WorkspaceFolder'
 import { Line, combineFileContent, trimEmpty } from 'src/utils/text'
-import { ensureWorkspaceFolder } from 'src/utils/workspace'
-import { TextEditor, Uri, commands, window, workspace } from 'vscode'
+import { ensureWorkspaceFolder, getTopLevelDirectoryEntries } from 'src/utils/workspace'
+import { QuickPickItem, QuickPickItemKind, TextEditor, Uri, WorkspaceConfiguration, commands, window, workspace } from 'vscode'
+import { getUntilValidate } from '../../libs/utils/Getter/getUntilValid'
+import { isExcluded, isHidden, leanFileExtensionLong } from '../constants'
 import { getImportLinesFromStrings, getOpenLinesFromStrings } from '../models/Lean/SyntaxNodes'
 import { getDeclarationSnippetLines } from '../utils/Lean/SnippetString'
 import { StaticQuickPickItem } from '../utils/QuickPickItem'
-import { ensureEditor, getSelectionText } from '../utils/TextEditor'
+import { ensureEditor, getSelectedName, getSelectedNames } from '../utils/TextEditor'
 
 export async function createNewFile() {
   const config = workspace.getConfiguration('lean4CodeActions.createNewFile')
   const editor = ensureEditor()
   const workspaceFolder = ensureWorkspaceFolder(editor.document.uri)
-  const keyword = await getKeyword()
-  if (keyword === undefined) return
-  const names = await getNamesFromEditor(editor)
+  const lib = await askLibFromEditor(editor)
+  if (lib === undefined) return
+  const names = await askNamesFromEditor(editor)
   if (names === undefined) return
-  const name = last(names)
-  const parents = withNamespacePrefix(names.slice(0, -1))
-  const imports = config.get<string[]>('imports', [])
-  const opens = config.get<string[]>('opens', [])
-  const derivings = config.get<string[]>('derivings', [])
-  const uri = getUriFromLeanNames(workspaceFolder, names)
-  const contents = getTypeFileContents(imports, opens, derivings)(keyword, parents, name)
+  const [namespace, name] = splitNames(names)
+  const variety = await askFileContentVarietyFromEditor(editor)
+  if (variety === undefined) return
+  const { brand, keyword } = variety
+  const tags = brand ? [brand] : []
+  const info: FileInfo = { lib, namespace, name, tags }
+  const uri = appendPath(workspaceFolder.uri, getRelativeFilePathFromFileInfo(info))
+  const contents = getTypeFileContentsFromConfigV2(config)(info, keyword)
   await createFileIfNotExists(uri, contents)
   await commands.executeCommand('vscode.open', uri)
 }
@@ -41,9 +49,58 @@ const withNamespacePrefix = (names: Name[]) => {
   return concat(prefix.split(leanNameSeparator), names)
 }
 
-export const getNamesFromEditor = async (editor: TextEditor) => {
-  const newName = getSelectionText(editor) ?? 'New'
-  return getNames(newName, editor.document.uri)
+export const askFilenameFromEditor = async (editor: TextEditor) => {
+  const newName = getSelectedName(editor) ?? 'New'
+  // TODO: validate path
+  return askFilename(newName, editor.document.uri)
+}
+
+export const askNamesFromEditor = async (editor: TextEditor) => {
+  // const newName = getSelectedName(editor) ?? 'New'
+  return askNames(editor.document.uri)
+}
+
+export const askLibFromEditor = async (editor: TextEditor) => {
+  return askLib(editor.document.uri)
+}
+
+export const askFileContentVarietyFromEditor = async (editor: TextEditor) => {
+  const names = getSelectedNames(editor) ?? []
+  return askFileContentVariety(names)(editor.document.uri)
+}
+
+export const askFileContentVariety = (names: Name[]) => async (currentDocumentUri: Uri) => {
+  const typeBrand: FileBrand = 'type'
+  const typeVarietyQuickPickItems = NewTypeKeywordSchema.options.map<StaticQuickPickItem<FileContentVariety>>(keyword => ({
+    label: `${typeBrand} (${keyword})`,
+    value: { brand: typeBrand, keyword },
+  }))
+  const brandVarietyQuickPickItems = FileBrandSchema.options.filter(brand => brand !== typeBrand).map<StaticQuickPickItem<FileContentVariety>>(brand => ({
+    label: brand,
+    value: { brand, keyword: null },
+  }))
+  const varietyQuickPickItems = concat(typeVarietyQuickPickItems, brandVarietyQuickPickItems)
+  const result = await window.showQuickPick(varietyQuickPickItems, {
+    title: 'Pick a file content variety',
+  })
+  return result && result.value
+}
+
+const getUntilValidMax = 10
+
+export async function askNames(currentDocumentUri: Uri) {
+  const { namespace, name } = getFileInfo(workspace.asRelativePath(currentDocumentUri))
+  const parentNamespace = toString(namespace)
+  const value = parentNamespace ? parentNamespace + leanNameSeparator + name : name
+  const valueSelection: [number, number] = [value.length - name.length, value.length]
+  const result = await window.showInputBox({
+    title: 'Lean namespace',
+    value,
+    valueSelection,
+  })
+  if (!result) return undefined
+  const names = result.split(leanNameSeparator).filter(identity)
+  return ensureNonEmptyArray(names)
 }
 
 // async function getImportsOpensDerivingsViaSubcommands(keyword: NewTypeKeyword, names: Name[]) {
@@ -53,7 +110,7 @@ export const getNamesFromEditor = async (editor: TextEditor) => {
 //   const derivings = (await subcommand<Derivings>('getDerivings')) || []
 // }
 
-async function getKeyword() {
+async function askKeyword() {
   const keywordQuickPickItems = NewTypeKeywordSchema.options.map<StaticQuickPickItem<NewTypeKeyword | null>>(keyword => ({
     label: keyword,
     value: keyword,
@@ -68,25 +125,61 @@ async function getKeyword() {
   return keywordResult && keywordResult.value
 }
 
-export async function getNames(newName: string, currentDocumentUri: Uri) {
-  const currentDocumentNames = getLeanNamesFromUri(currentDocumentUri)
-  const currentDocumentParentNames = currentDocumentNames.slice(0, -1)
-  const parentNamespace = toString(currentDocumentParentNames)
-  const value = parentNamespace ? parentNamespace + leanNameSeparator + newName : newName
-  const valueSelection: [number, number] = [value.length - newName.length, value.length]
-  const result = await window.showInputBox({
-    title: 'Fully qualified Lean name for new type',
-    value,
-    valueSelection,
-  })
-  if (!result) return undefined
-  const names = result.split(leanNameSeparator).filter(identity)
-  return ensureNonEmptyArray(names)
+export async function askLib(currentDocumentUri: Uri) {
+  const relativePath = getRelativePathFromUri(currentDocumentUri)
+  const defaultLib = relativePath.split(path.sep)[1]
+  const libEntries = await getTopLevelDirectoryEntries(currentDocumentUri)
+  if (!libEntries) throw new Error(`Cannot get top level directory paths from uri: ${currentDocumentUri}`)
+  const libs = libEntries.filter(lib => !isHidden(lib) && !isExcluded(lib) && lib !== defaultLib)
+  // const currentDocumentNames = getLeanNamesFromUri(currentDocumentUri)
+  // const currentDocumentParentNames = currentDocumentNames.slice(0, -1)
+  // const parentNamespace = toString(currentDocumentParentNames)
+  // const value = parentNamespace ? parentNamespace + leanNameSeparator + newName : newName
+  // const valueSelection: [number, number] = [value.length - newName.length, value.length]
+  const items: QuickPickItem[] = [
+    {
+      label: defaultLib,
+      kind: QuickPickItemKind.Default,
+    },
+    {
+      label: '',
+      kind: QuickPickItemKind.Separator,
+    },
+    ...libs.map<QuickPickItem>(lib => ({
+      label: lib,
+      kind: QuickPickItemKind.Default,
+    })),
+  ]
+  const result = await window.showQuickPick(items, { title: 'Pick a library' })
+  return result && result.label
 }
 
-export const getTypeFileContentsC = (config: CreateFileConfig) => getTypeFileContents(config.imports, config.opens, config.derivings)
+export const askFilename = async (name: string, currentDocumentUri: Uri) => {
+  const pathname = getRelativePathFromUri(currentDocumentUri)
+  const { dir } = path.parse(pathname)
+  // TODO: validate path in a loop
+  const prefix = dir.substring(1) + path.sep
+  const suffix = leanFileExtensionLong
+  const value = prefix + name + suffix
+  const valueSelection: [number, number] = [prefix.length, prefix.length + name.length]
+  const validate = async (filepath: string) => {
+    const { ext } = path.parse(filepath)
+    if (ext !== leanFileExtensionLong) throw new Error(`Extension must be equal to ${leanFileExtensionLong}`)
+    return filepath
+  }
+  const get = async () => {
+    return window.showInputBox({
+      title: 'New file path',
+      value,
+      valueSelection,
+    })
+  }
+  return getUntilValidate(getUntilValidMax, validate)(get)
+}
 
-export const wrapFileContents = (imports: string[], opens: string[]) => (parents: Name[], name: Name) => (contentsLines: Line[]) => {
+export const getTypeFileContentsCV1 = (config: CreateFileConfig) => getTypeFileContentsV1(config.imports, config.opens, config.derivings)
+
+export const wrapFileContentsV1 = (imports: string[], opens: string[]) => (parents: Name[], name: Name) => (contentsLines: Line[]) => {
   const importsLines = getImportLinesFromStrings(imports)
   const parentNamespaceLines = [`namespace ${toString(parents)}`]
   const opensLines = getOpenLinesFromStrings(opens)
@@ -100,8 +193,50 @@ export const wrapFileContents = (imports: string[], opens: string[]) => (parents
   ].filter(isNonEmptyArray))
 }
 
-export const getTypeFileContents = (imports: string[], opens: string[], derivings: string[]) => (keyword: NewTypeKeyword | null, parents: Name[], name: Name) => {
+export const wrapFileContentsV2 = (imports: string[], opens: string[]) => (info: FileInfo, keyword: NewTypeKeyword | null) => (contentsLines: Line[]) => {
+  const { lib, namespace, name, tags } = info
+  const importsLines = getImportLinesFromStrings(imports)
+  const opensLines = getOpenLinesFromStrings(opens)
+  if (keyword) {
+    const parentNamespaceLines = [`namespace ${toString(namespace)}`]
+    const childNamespaceLines = [`namespace ${name}`]
+    return combineFileContent([
+      importsLines,
+      parentNamespaceLines,
+      opensLines,
+      contentsLines,
+      childNamespaceLines,
+    ].filter(isNonEmptyArray))
+  } else {
+    const names = [...namespace, name]
+    const namespaceLines = [`namespace ${toString(names)}`]
+    return combineFileContent([
+      importsLines,
+      namespaceLines,
+      opensLines,
+      contentsLines,
+    ].filter(isNonEmptyArray))
+  }
+
+}
+
+export const getTypeFileContentsV1 = (imports: string[], opens: string[], derivings: string[]) => (keyword: NewTypeKeyword | null, parents: Name[], name: Name) => {
   const declarationSnippetLines = getDeclarationSnippetLines(derivings, keyword)
   const declarationLines = trimEmpty(replaceSnippetVariables(['$1', name, '$1'])(declarationSnippetLines))
-  return wrapFileContents(imports, opens)(parents, name)(declarationLines)
+  return wrapFileContentsV1(imports, opens)(parents, name)(declarationLines)
 }
+
+export const getTypeFileContentsV2 = (imports: string[], opens: string[], derivings: string[]) => (info: FileInfo, keyword: NewTypeKeyword | null) => {
+  const { name } = info
+  const declarationSnippetLines = getDeclarationSnippetLines(derivings, keyword)
+  const declarationLines = trimEmpty(replaceSnippetVariables(['$1', name, '$1'])(declarationSnippetLines))
+  return wrapFileContentsV2(imports, opens)(info, keyword)(declarationLines)
+}
+
+export const getTypeFileContentsFromConfigV2 = (config: WorkspaceConfiguration) => {
+  const imports = config.get<string[]>('imports', [])
+  const opens = config.get<string[]>('opens', [])
+  const derivings = config.get<string[]>('derivings', [])
+  return getTypeFileContentsV2(imports, opens, derivings)
+}
+
