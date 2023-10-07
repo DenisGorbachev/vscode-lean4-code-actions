@@ -1,5 +1,6 @@
 import { longestCommonPrefix } from 'libs/utils/string'
 import { flatten, last, sortBy } from 'remeda'
+import { exclude } from 'src/constants'
 import { toHieroName, toString } from 'src/models/Lean/HieroName'
 import { Name } from 'src/models/Lean/Name'
 import { Precint, PrecintType, getPrecintFromUri } from 'src/utils/Lean/Lsp/WorkspaceSymbol'
@@ -41,13 +42,13 @@ export async function autoImport() {
   })
 }
 
-const getQuickPickItemsFromWorkspaceFiles = async (name: string) => {
+const getQuickPickItemsFromWorkspaceFiles = async (query: string) => {
   const editor = ensureEditor()
   const documentUriStr = editor.document.uri.toString()
-  const names = toHieroName(name)
-  const lastName = last(names)
-  if (!lastName) throw new Error(`Cannot parse Lean name: "${name}"`)
-  const uris = await workspace.findFiles(`**/*${lastName}.lean`, '{build,lake-packages}')
+  const names = toHieroName(query)
+  const name = last(names)
+  if (!name) throw new Error(`Cannot parse Lean name: "${query}"`)
+  const uris = await workspace.findFiles(`**/*${name}*.lean`, exclude)
   const infosRaw = uris.map(uri => {
     const workspaceFolder = ensureWorkspaceFolder(uri)
     const title = getRelativeFilePathFromAbsoluteFilePath(workspaceFolder.uri.fsPath, uri.fsPath)
