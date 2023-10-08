@@ -1,8 +1,8 @@
 import * as path from 'path'
+import { getFileInfoFromUri } from 'src/models/FileInfo'
 import { HieroName } from 'src/models/Lean/HieroName'
 import { Uri, workspace } from 'vscode'
 import { toString } from '../models/Lean/HieroName'
-import { getLeanNamesFromUri } from './WorkspaceFolder'
 import { Line } from './text'
 
 export const getNames = (uri: Uri) => {
@@ -27,13 +27,13 @@ export const ensureNames = (uri: Uri) => {
 export const toNamespace = (names: HieroName) => `namespace ${toString(names)}`
 
 export const getNamespaceLinesFromFileName = (uri: Uri): Line[] => {
-  const names = getLeanNamesFromUri(uri)
-  return [toNamespace(names.slice(-1))]
+  const { name } = getFileInfoFromUri(uri)
+  return [toNamespace([name])]
 }
 
 export const getNamespaceLinesFromFilePath = (uri: Uri): Line[] => {
-  const names = getLeanNamesFromUri(uri)
-  return [toNamespace(names.slice(0, -1))]
+  const { namespace, name } = getFileInfoFromUri(uri)
+  return [toNamespace([...namespace, name])]
 }
 
 export const toolchainMarker = 'leanprover'

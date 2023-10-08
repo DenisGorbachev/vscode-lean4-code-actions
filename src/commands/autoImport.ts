@@ -22,8 +22,7 @@ interface AutoImportQuickPickValue {
 
 export async function autoImport() {
   const editor = ensureEditor()
-  const name = getSelectedName(editor)
-  if (!name) throw new Error('Text selection is empty: please select the name for auto-import in the editor')
+  const name = getSelectedName(editor) ?? ''
   const itemsArray = await Promise.all([
     getQuickPickItemsFromWorkspaceFiles(name),
     getQuickPickItemsFromWorkspaceSymbols(name),
@@ -47,8 +46,8 @@ const getQuickPickItemsFromWorkspaceFiles = async (query: string) => {
   const documentUriStr = editor.document.uri.toString()
   const names = toHieroName(query)
   const name = last(names)
-  if (!name) throw new Error(`Cannot parse Lean name: "${query}"`)
-  const uris = await workspace.findFiles(`**/*${name}*.lean`, exclude)
+  const pattern = name ? `**/*${name}*.lean` : '**/*.lean'
+  const uris = await workspace.findFiles(pattern, exclude)
   const infosRaw = uris.map(uri => {
     const workspaceFolder = ensureWorkspaceFolder(uri)
     const title = getRelativeFilePathFromAbsoluteFilePath(workspaceFolder.uri.fsPath, uri.fsPath)

@@ -1,7 +1,9 @@
 import { not } from 'libs/generic/models/Filter'
 import { ensureByIndex } from 'libs/utils/ensure'
 import path from 'path'
+import { getRelativePathFromUri } from 'src/utils/Uri'
 import { isEmpty } from 'voca'
+import { Uri } from 'vscode'
 import { fileTagsSeparator } from './FileTag'
 import { Name } from './Lean/Name'
 
@@ -23,3 +25,7 @@ export const getFileInfo = (pathname: string): FileInfo => {
   return { lib, namespace, name, tags }
 }
 
+export const getFileInfoFromUri = (uri: Uri) => {
+  const relativeFilePath = getRelativePathFromUri(uri)
+  return getFileInfo(relativeFilePath)
+}

@@ -12,6 +12,7 @@ import { createNewFileSet } from './commands/createNewFileSet'
 import { extractDefinitionToSeparateFile } from './commands/extractDefinitionToSeparateFile'
 import { setArgumentStyle } from './commands/setArgumentStyle'
 import { onDidRenameFiles } from './listeners/onDidRenameFiles'
+import { getFileInfoFromUri } from './models/FileInfo'
 import { getImportLinesFromStrings, getOpenLinesFromStrings } from './models/Lean/SyntaxNodes'
 import { provideRenameEdits } from './providers/providerRenameEdits'
 import { getNames, getNamespaceLinesFromFileName, getNamespaceLinesFromFilePath } from './utils/Lean'
@@ -75,8 +76,7 @@ export function activate(context: ExtensionContext) {
   }
 
   const getVariableLines = (uri: Uri) => {
-    const namespaces = getNames(uri)
-    const typeName = namespaces.pop()
+    const { name: typeName } = getFileInfoFromUri(uri)
     const varName = typeName && getShortNameFromType(typeName)
     return [`variable (\${1:${varName}} : \${2:${typeName}})`]
   }
