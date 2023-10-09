@@ -48,7 +48,7 @@ Note: a custom language configuration is available as [a separate extension](htt
 * `lean4CodeActions.createNewFile.imports` - a list of Lean filenames to be imported.
 * `lean4CodeActions.createNewFile.opens` - a list of Lean namespaces to be opened.
 * `lean4CodeActions.createNewFile.derivings` - a list of Lean names to be derived.
-* `lean4CodeActions.defaultLib` - Specifies the default library to be used when creating a new file. This should be a string representing the library name. The library specified here will be automatically imported when a new file is created.
+* `lean4CodeActions.defaultLib` - the default library to be used when creating a new file. If it's empty, the extension will ask you to choose the library interactively.
 
 ## Related work
 
