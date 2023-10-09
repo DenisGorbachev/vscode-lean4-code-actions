@@ -70,6 +70,11 @@
             "type": "string"
           },
           "default": []
+        },
+        "lean4CodeActions.defaultLib": {
+          "markdownDescription": "Default library to be used",
+          "type": "string",
+          "default": ""
         }
       }
     },
