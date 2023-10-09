@@ -72,7 +72,7 @@
           "default": []
         },
         "lean4CodeActions.defaultLib": {
-          "markdownDescription": "Default library to be used",
+          "markdownDescription": "Default library to be used when creating a new file",
           "type": "string",
           "default": ""
         }
