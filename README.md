@@ -48,6 +48,7 @@ Note: a custom language configuration is available as [a separate extension](htt
 * `lean4CodeActions.createNewFile.imports` - a list of Lean filenames to be imported.
 * `lean4CodeActions.createNewFile.opens` - a list of Lean namespaces to be opened.
 * `lean4CodeActions.createNewFile.derivings` - a list of Lean names to be derived.
+* `lean4CodeActions.defaultLib` - default library to be used when creating a new file.
 
 ## Related work
 
