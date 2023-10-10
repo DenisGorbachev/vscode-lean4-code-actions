@@ -1,17 +1,17 @@
 import { WorkspaceConfiguration, workspace } from 'vscode'
 
-export interface CreateFileConfig {
+export interface CreateNewFileConfig {
   imports: string[]
   opens: string[]
   derivings: string[]
 }
 
-export const getCreateFileConfig = (section: string) => {
+export const getCreateNewFileConfig = (section: string) => {
   const configuration = workspace.getConfiguration(section)
-  return getCreateFileConfigFromWorkspaceConfiguration(configuration)
+  return getCreateNewFileConfigFromWorkspaceConfiguration(configuration)
 }
 
-export const getCreateFileConfigFromWorkspaceConfiguration = (config: WorkspaceConfiguration) => ({
+export const getCreateNewFileConfigFromWorkspaceConfiguration = (config: WorkspaceConfiguration) => ({
   imports: config.get<string[]>('imports', []),
   opens: config.get<string[]>('opens', []),
   derivings: config.get<string[]>('derivings', []),

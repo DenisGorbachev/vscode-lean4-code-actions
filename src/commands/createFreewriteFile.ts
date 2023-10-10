@@ -1,46 +1,34 @@
+import { Name } from 'libs/generic/models/Name'
 import { nail } from 'libs/utils/string'
+import { FileInfo } from 'src/models/FileInfo'
+import { ensureEditor } from 'src/utils/TextEditor'
+import { appendPath } from 'src/utils/Uri'
 import { createFileIfNotExists } from 'src/utils/WorkspaceEdit'
-import { commands, window, workspace } from 'vscode'
+import { ensureWorkspaceFolder } from 'src/utils/workspace'
+import { commands } from 'vscode'
 
 export async function createFreewriteFile() {
-  const { workspaceFolders } = workspace
-  if (!workspaceFolders) {
-    window.showErrorMessage('No workspace folders found')
-    return
-  }
-
-  const workspaceFolder = workspaceFolders[0]
-  if (!workspaceFolder) {
-    window.showErrorMessage('No workspace folder found')
-    return
-  }
-
-  const root = workspaceFolder.uri.fsPath
   const now = new Date()
+  const editor = ensureEditor()
+  const workspaceFolder = ensureWorkspaceFolder(editor.document.uri)
+  const name = getFreewriteName(now)
+  const info: FileInfo = { lib: 'Playbook', namespace: ['Freewrite'], name, tags: [] }
+  const uri = appendPath(workspaceFolder.uri, getRelativeFilePathFromFileInfo(info))
+  const contents = getTypeFileContentsFromConfigV2(config)(info, keyword)
+  await createFileIfNotExists(uri, contents)
 
-  const ns = getFreewriteNamespace(now)
-  const path = `${root}/Freewrite/${ns}.lean`
-  const uri = workspaceFolder.uri.with({ path })
-  const content = getFreewriteFileContent(ns)
-  await createFileIfNotExists(uri, content, { overwrite: false })
+  // const content = getFreewriteFileContent(ns)
+  // await createFileIfNotExists(uri, content, { overwrite: false })
   await commands.executeCommand('vscode.open', uri)
 }
 
-const getFreewriteFileContent = (namespace: string) => {
-  return nail(`
-		import Playbook.Std
-		import Playbook.Generic
-		
-		open Playbook Std Generic
-		
-		namespace Freewrite
-		
-		namespace ${namespace}
-		
-		def thoughts : Thoughts := []
+const getFreewriteFileContent = (name: Name) => {
+  const content = nail(`
+    def thoughts : Thoughts := []
 
-		def wishes : Thoughts := []
-	`).trim()
+    def wishes : Thoughts := []
+  `)
+
 }
 
-export const getFreewriteNamespace = (now: Date) => 'on_' + now.toISOString().slice(0, 10).replace(/-/g, '_')
+export const getFreewriteName = (now: Date) => 'on_' + now.toISOString().slice(0, 10).replace(/-/g, '_')

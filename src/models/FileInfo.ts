@@ -1,5 +1,4 @@
 import { not } from 'libs/generic/models/Filter'
-import { ensureByIndex } from 'libs/utils/ensure'
 import path from 'path'
 import { getRelativePathFromUri } from 'src/utils/Uri'
 import { isEmpty } from 'voca'
@@ -14,13 +13,15 @@ export interface FileInfo {
   tags: Name[]
 }
 
-export const getFileInfo = (pathname: string): FileInfo => {
+export const getFileInfo = (pathname: string): FileInfo | undefined => {
   const { dir, name: basename } = path.parse(pathname)
   const dirSplinters = dir.split(path.sep).filter(not(isEmpty))
   const basenameSplinters = basename.split(fileTagsSeparator).filter(not(isEmpty))
-  const lib = ensureByIndex(dirSplinters, 0)
+  const lib = dirSplinters[0]
+  if (!lib) return undefined
   const namespace = dirSplinters.slice(1)
-  const name = ensureByIndex(basenameSplinters, 0)
+  const name = basenameSplinters[0]
+  if (!basenameSplinters) return undefined
   const tags = basenameSplinters.slice(1)
   return { lib, namespace, name, tags }
 }

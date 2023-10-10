@@ -7,11 +7,11 @@ import { getUriFromLeanNames } from 'src/utils/WorkspaceFolder'
 import { ensureWorkspaceFolder } from 'src/utils/workspace'
 import { WorkspaceEdit, WorkspaceFolder, commands } from 'vscode'
 import { ensureEditor } from '../utils/TextEditor'
-import { CreateFileConfig, getCreateFileConfig } from '../utils/WorkspaceConfiguration/CreateFileConfig'
+import { CreateNewFileConfig, getCreateNewFileConfig } from '../utils/WorkspaceConfiguration/CreateFileConfig'
 import { askNamesFromEditor, getTypeFileContentsCV1, wrapFileContentsV1 } from './createNewFile'
 
 export async function createNewFileSet() {
-  const config = getCreateFileConfig('lean4CodeActions.createNewFile')
+  const config = getCreateNewFileConfig('lean4CodeActions.createNewFile')
   const editor = ensureEditor()
   const workspaceFolder = ensureWorkspaceFolder(editor.document.uri)
   const names = await askNamesFromEditor(editor)
@@ -26,13 +26,13 @@ export async function createNewFileSet() {
   await commands.executeCommand('vscode.open', mainUri)
 }
 
-const createDataFile = (workspaceFolder: WorkspaceFolder, config: CreateFileConfig) => (parents: NonEmptyArray<Name>) => (edit: WorkspaceEdit) => {
+const createDataFile = (workspaceFolder: WorkspaceFolder, config: CreateNewFileConfig) => (parents: NonEmptyArray<Name>) => (edit: WorkspaceEdit) => {
   const name = 'Data'
   const contents = getTypeFileContentsCV1(config)('structure', parents, name)
   createFileFromNames(workspaceFolder, edit, parents, name, contents)
 }
 
-const createLawsFile = (workspaceFolder: WorkspaceFolder, config: CreateFileConfig) => (parents: NonEmptyArray<Name>) => (edit: WorkspaceEdit) => {
+const createLawsFile = (workspaceFolder: WorkspaceFolder, config: CreateNewFileConfig) => (parents: NonEmptyArray<Name>) => (edit: WorkspaceEdit) => {
   const name = 'Laws'
   const declarationLines = [
     `structure ${name} (data : Data) : Prop where`,
@@ -45,7 +45,7 @@ const createLawsFile = (workspaceFolder: WorkspaceFolder, config: CreateFileConf
   createFileFromNames(workspaceFolder, edit, parents, name, contents)
 }
 
-const createMainFile = (workspaceFolder: WorkspaceFolder, config: CreateFileConfig) => (names: NonEmptyArray<Name>) => (edit: WorkspaceEdit) => {
+const createMainFile = (workspaceFolder: WorkspaceFolder, config: CreateNewFileConfig) => (names: NonEmptyArray<Name>) => (edit: WorkspaceEdit) => {
   const name = last(names)
   const parents = names.slice(0, -1)
   const declarationLines = [

@@ -10,17 +10,18 @@ import { Name, splitNames } from 'src/models/Lean/Name'
 import { NewTypeKeyword, NewTypeKeywordSchema } from 'src/models/NewTypeKeyword'
 import { replaceSnippetVariables } from 'src/utils/SnippetString'
 import { appendPath, getRelativePathFromUri } from 'src/utils/Uri'
-import { CreateFileConfig } from 'src/utils/WorkspaceConfiguration/CreateFileConfig'
+import { CreateNewFileConfig } from 'src/utils/WorkspaceConfiguration/CreateFileConfig'
 import { createFileIfNotExists } from 'src/utils/WorkspaceEdit'
 import { Line, combineFileContent, trimEmpty } from 'src/utils/text'
 import { ensureWorkspaceFolder, getTopLevelDirectoryEntries } from 'src/utils/workspace'
-import { QuickPickItem, QuickPickItemKind, TextEditor, Uri, WorkspaceConfiguration, commands, window, workspace } from 'vscode'
+import { QuickPickItem, QuickPickItemKind, TextEditor, Uri, commands, window, workspace } from 'vscode'
 import { getUntilValidate } from '../../libs/utils/Getter/getUntilValid'
 import { isExcluded, isHidden, leanFileExtensionLong } from '../constants'
 import { getImportLinesFromStrings, getOpenLinesFromStrings } from '../models/Lean/SyntaxNodes'
 import { getDeclarationSnippetLines } from '../utils/Lean/SnippetString'
 import { StaticQuickPickItem } from '../utils/QuickPickItem'
 import { ensureEditor, getSelectedName, getSelectedNames } from '../utils/TextEditor'
+import { withImportsOpens, withImportsOpensDerivings } from '../utils/WorkspaceConfiguration/withImportsOpensDerivings'
 
 export async function createNewFile() {
   const config = workspace.getConfiguration('lean4CodeActions.createNewFile')
@@ -61,6 +62,8 @@ export const askNamesFromEditor = async (editor: TextEditor) => {
 }
 
 export const askLibFromEditor = async (editor: TextEditor) => {
+  const defaultLib = workspace.getConfiguration('lean4CodeActions').get<string>('defaultLib')
+  if (defaultLib) return defaultLib
   return askLib(editor.document.uri)
 }
 
@@ -89,12 +92,13 @@ export const askFileContentVariety = (names: Name[]) => async (currentDocumentUr
 const getUntilValidMax = 10
 
 export async function askNames(currentDocumentUri: Uri) {
-  const { namespace, name } = getFileInfo(workspace.asRelativePath(currentDocumentUri))
+  const info = getFileInfo(workspace.asRelativePath(currentDocumentUri))
+  const { namespace, name } = info ?? { namespace: [], name: 'New' }
   const parentNamespace = toString(namespace)
   const value = parentNamespace ? parentNamespace + leanNameSeparator + name : name
   const valueSelection: [number, number] = [value.length - name.length, value.length]
   const result = await window.showInputBox({
-    title: 'Lean namespace',
+    title: 'Fully qualified Lean name',
     value,
     valueSelection,
   })
@@ -177,7 +181,7 @@ export const askFilename = async (name: string, currentDocumentUri: Uri) => {
   return getUntilValidate(getUntilValidMax, validate)(get)
 }
 
-export const getTypeFileContentsCV1 = (config: CreateFileConfig) => getTypeFileContentsV1(config.imports, config.opens, config.derivings)
+export const getTypeFileContentsCV1 = (config: CreateNewFileConfig) => getTypeFileContentsV1(config.imports, config.opens, config.derivings)
 
 export const wrapFileContentsV1 = (imports: string[], opens: string[]) => (parents: Name[], name: Name) => (contentsLines: Line[]) => {
   const importsLines = getImportLinesFromStrings(imports)
@@ -217,7 +221,6 @@ export const wrapFileContentsV2 = (imports: string[], opens: string[]) => (info:
       contentsLines,
     ].filter(isNonEmptyArray))
   }
-
 }
 
 export const getTypeFileContentsV1 = (imports: string[], opens: string[], derivings: string[]) => (keyword: NewTypeKeyword | null, parents: Name[], name: Name) => {
@@ -233,10 +236,6 @@ export const getTypeFileContentsV2 = (imports: string[], opens: string[], derivi
   return wrapFileContentsV2(imports, opens)(info, keyword)(declarationLines)
 }
 
-export const getTypeFileContentsFromConfigV2 = (config: WorkspaceConfiguration) => {
-  const imports = config.get<string[]>('imports', [])
-  const opens = config.get<string[]>('opens', [])
-  const derivings = config.get<string[]>('derivings', [])
-  return getTypeFileContentsV2(imports, opens, derivings)
-}
+export const getTypeFileContentsFromConfigV2 = withImportsOpensDerivings(getTypeFileContentsV2)
 
+export const wrapFileContentsFromConfigV2 = withImportsOpens(wrapFileContentsV2)
