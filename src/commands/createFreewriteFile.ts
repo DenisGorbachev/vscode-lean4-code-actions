@@ -12,7 +12,7 @@ export async function createFreewriteFile() {
   const editor = ensureEditor()
   const workspaceFolder = ensureWorkspaceFolder(editor.document.uri)
   const name = getFreewriteName(now)
-  const info: FileInfo = { lib: 'Playbook', namespace: ['Freewrite'], name, tags: [] }
+  const info: FileInfo = createFileInfo('Playbook', ['Freewrite'], name, [])
   const uri = appendPath(workspaceFolder.uri, getRelativeFilePathFromFileInfo(info))
   const contents = getTypeFileContentsFromConfigV2(config)(info, keyword)
   await createFileIfNotExists(uri, contents)
