@@ -98,6 +98,10 @@
         "title": "Lean 4: Create a new file set (data, laws, subtype)"
       },
       {
+        "command": "lean4CodeActions.renameDefinition",
+        "title": "Lean 4: Rename the main definition in the current file"
+      },
+      {
         "command": "lean4CodeActions.setArgumentStyle",
         "title": "Lean 4: Set argument style"
       },

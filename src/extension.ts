@@ -10,7 +10,8 @@ import { createFreewriteFile } from './commands/createFreewriteFile'
 import { createNewFile } from './commands/createNewFile'
 import { createNewFileSet } from './commands/createNewFileSet'
 import { extractDefinitionToSeparateFile } from './commands/extractDefinitionToSeparateFile'
-import { setArgumentStyle, renameDeclaration } from './commands/setArgumentStyle'
+import { renameDeclaration as renameDefinition } from './commands/renameDefinition'
+import { setArgumentStyle } from './commands/setArgumentStyle'
 import { onDidRenameFiles } from './listeners/onDidRenameFiles'
 import { getFileInfoFromUri } from './models/FileInfo'
 import { getImportLinesFromStrings, getOpenLinesFromStrings } from './models/Lean/SyntaxNodes'
@@ -34,7 +35,8 @@ export function activate(context: ExtensionContext) {
   const createNewFileSetCommand = commands.registerCommand('lean4CodeActions.createNewFileSet', createNewFileSet)
 
   const setArgumentStyleCommand = commands.registerCommand('lean4CodeActions.setArgumentStyle', setArgumentStyle)
-  const renameDeclarationCommand = commands.registerCommand('lean4CodeActions.renameDeclaration', renameDeclaration)
+
+  const renameDeclarationCommand = commands.registerCommand('lean4CodeActions.renameDefinition', renameDefinition)
 
   // const renameLocalVariableCommand = commands.registerCommand('lean4CodeActions.renameLocalVariable', renameLocalVariable)
 
