@@ -49,7 +49,19 @@ const replaceNamespace = (oldName: string, newName: string) => (uri: Uri) => (ed
   findReplace(prev, next)(uri)(edit)
 }
 
-const findReplace = (prev: string, next: string) => (uri: Uri) => (edit: WorkspaceEdit) => {
-  throw new Error('Function not implemented.')
+import { workspace, Range, Position } from 'vscode'
+
+const findReplace = (prev: string, next: string) => (uri: Uri) => async (edit: WorkspaceEdit) => {
+  const document = await workspace.openTextDocument(uri)
+  const text = document.getText()
+  let startIndex = text.indexOf(prev)
+  while (startIndex !== -1) {
+    const endIndex = startIndex + prev.length
+    const start = document.positionAt(startIndex)
+    const end = document.positionAt(endIndex)
+    const range = new Range(start, end)
+    edit.replace(uri, range, next)
+    startIndex = text.indexOf(prev, endIndex)
+  }
 }
 
