@@ -26,13 +26,17 @@ export const ensureNames = (uri: Uri) => {
 
 export const toNamespace = (names: HieroName) => `namespace ${toString(names)}`
 
-export const getNamespaceLinesFromFileName = (uri: Uri): Line[] => {
-  const { name } = getFileInfoFromUri(uri)
+export const getNamespaceLinesFromFileName = (uri: Uri): Line[] | undefined => {
+  const info = getFileInfoFromUri(uri)
+  if (!info) return
+  const { name } = info
   return [toNamespace([name])]
 }
 
-export const getNamespaceLinesFromFilePath = (uri: Uri): Line[] => {
-  const { namespace, name } = getFileInfoFromUri(uri)
+export const getNamespaceLinesFromFilePath = (uri: Uri): Line[] | undefined => {
+  const info = getFileInfoFromUri(uri)
+  if (!info) return
+  const { namespace, name } = info
   return [toNamespace([...namespace, name])]
 }
 

@@ -24,9 +24,9 @@ export function getDeclarationSnippetLines(derivings: string[], keyword: NewType
     case 'abbrev':
     case 'def':
       return [
-        `${keyword} \${1:Name} : sorry := \${0:sorry}`,
-        '',
-        derivings.length ? `deriving instance ${derivings.join(', ')} for \${1:Name}` : '',
+        `${keyword} \${1:Name} := \${0:sorry}`,
+        // '',
+        // derivings.length ? `deriving instance ${derivings.join(', ')} for \${1:Name}` : '',
       ]
     case null:
       return []

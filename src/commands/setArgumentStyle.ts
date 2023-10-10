@@ -36,7 +36,9 @@ const getClosestCharacterPairRangeInfo = (editor: TextEditor, pairs: StyleCharac
   const getRange = getRangeFromOffsets(positionAt)
   const text = getText()
   const cursorOffset = offsetAt(selection.active)
-  const { pair, offsetLeft, offsetRight } = getClosestStringPairWithOffsets(pairs, text, cursorOffset)
+  const closestStringPairWithOffsets = getClosestStringPairWithOffsets(pairs, text, cursorOffset)
+  if (!closestStringPairWithOffsets) return undefined
+  const { pair, offsetLeft, offsetRight } = closestStringPairWithOffsets
   const rangeOuter = getRange(offsetLeft, offsetRight + pair.right.length)
   const rangeInner = getRange(offsetLeft + pair.left.length, offsetRight)
   return { pair, rangeOuter, rangeInner }

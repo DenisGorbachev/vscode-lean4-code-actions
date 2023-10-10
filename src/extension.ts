@@ -1,7 +1,7 @@
 // Import the module and reference it with the alias vscode in your code below
 // import * as vscode from 'vscode';
 import * as path from 'path'
-import { identity, last } from 'remeda'
+import { identity, isDefined, last } from 'remeda'
 import { kebabCase } from 'voca'
 import { CompletionItem, CompletionItemKind, CompletionItemLabel, ExtensionContext, Position, SnippetString, TextDocument, Uri, commands, env, languages, window, workspace } from 'vscode'
 import { autoImport } from './commands/autoImport'
@@ -76,7 +76,9 @@ export function activate(context: ExtensionContext) {
   }
 
   const getVariableLines = (uri: Uri) => {
-    const { name: typeName } = getFileInfoFromUri(uri)
+    const info = getFileInfoFromUri(uri)
+    if (!info) return
+    const { name: typeName } = info
     const varName = typeName && getShortNameFromType(typeName)
     return [`variable (\${1:${varName}} : \${2:${typeName}})`]
   }
@@ -86,11 +88,11 @@ export function activate(context: ExtensionContext) {
     return last(kebabCase(typeNameNoVersion).split('-'))
   }
 
-  const getShortNameFromTypeSpec = ($words: [string, ...string[]]) => {
-    const words = $words.map(w => w.toLowerCase())
-    const input = words.map(w => w.toUpperCase()).join('')
-    const output = words[words.length - 1].toLowerCase()
-  }
+  // const getShortNameFromTypeSpec = ($words: [string, ...string[]]) => {
+  //   const words = $words.map(w => w.toLowerCase())
+  //   const input = words.map(w => w.toUpperCase()).join('')
+  //   const output = words[words.length - 1].toLowerCase()
+  // }
 
   const toUpperCaseFirstLetter = (input: string) => {
     if (input.length === 0) {
@@ -118,11 +120,15 @@ export function activate(context: ExtensionContext) {
 
   const getCompletionItemInsertTextSnippetLines = (label: string | CompletionItemLabel, lines: string[]) => getCompletionItem(label, CompletionItemKind.Snippet)({ insertText: getSnippetStringFromSnippetLines(lines) })
 
+  const getCompletionItemInsertTextSnippetLinesChecked = (label: string | CompletionItemLabel, lines: string[] | undefined) => lines ? getCompletionItemInsertTextSnippetLines(label, lines) : undefined
+
   const getCompletionItemITS = getCompletionItemInsertTextSimple
 
   const getCompletionItemITN = getCompletionItemInsertTextSnippet
 
   const getCompletionItemITSL = getCompletionItemInsertTextSnippetLines
+
+  const getCompletionItemITSLC = getCompletionItemInsertTextSnippetLinesChecked
 
   const completions = languages.registerCompletionItemProvider(
     {
@@ -137,18 +143,16 @@ export function activate(context: ExtensionContext) {
         const opens = config.get<string[]>('createNewFile.opens', [])
         const importLines = getImportLinesFromStrings(imports)
         const openLines = getOpenLinesFromStrings(opens)
-        // const cimp = new CompletionItem('cimp')
-        // cimp.insertText = await getClipboardImportShorthand()
         return [
-          (getCompletionItemITSL('imp', importLines)),
-          (getCompletionItemITSL('op', openLines)),
-          (getCompletionItemITSL('ns', getNamespaceLinesFromFileName(document.uri))),
-          (getCompletionItemITSL('nsp', getNamespaceLinesFromFilePath(document.uri))),
-          (getCompletionItemITSL('var', getVariableLines(document.uri))),
-          (getCompletionItemITSL('struct', getDeclarationSnippetLines(derivings, 'structure'))),
-          (getCompletionItemITSL('ind', getDeclarationSnippetLines(derivings, 'inductive'))),
-          (getCompletionItemITSL('cls', getDeclarationSnippetLines(derivings, 'class'))),
-        ]
+          (getCompletionItemITSLC('imp', importLines)),
+          (getCompletionItemITSLC('op', openLines)),
+          (getCompletionItemITSLC('ns', getNamespaceLinesFromFileName(document.uri))),
+          (getCompletionItemITSLC('nsp', getNamespaceLinesFromFilePath(document.uri))),
+          (getCompletionItemITSLC('var', getVariableLines(document.uri))),
+          (getCompletionItemITSLC('struct', getDeclarationSnippetLines(derivings, 'structure'))),
+          (getCompletionItemITSLC('ind', getDeclarationSnippetLines(derivings, 'inductive'))),
+          (getCompletionItemITSLC('cls', getDeclarationSnippetLines(derivings, 'class'))),
+        ].filter(isDefined)
       },
     },
   )
@@ -171,3 +175,8 @@ export function activate(context: ExtensionContext) {
 
 // This method is called when your extension is deactivated
 export function deactivate() { }
+
+interface Snippet {
+  label: string | CompletionItemLabel
+  lines: string[] | undefined
+}

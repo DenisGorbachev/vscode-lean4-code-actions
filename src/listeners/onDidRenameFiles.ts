@@ -31,7 +31,7 @@ export const onDidRenameFiles = async (event: FileRenameEvent) => {
       const total = uris.length
       const increment = 1 / total
       for (let index = 0; index < uris.length; index++) {
-        const uri = uris[index]
+        const uri = uris[index]!
         // opening a new document each time to keep the memory footprint low (otherwise we'll get OOM in large workspaces)
         const document = await workspace.openTextDocument(uri)
         const { getText, positionAt } = document

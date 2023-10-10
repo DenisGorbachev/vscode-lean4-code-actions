@@ -3,19 +3,18 @@ import path from 'path'
 import { concat, identity } from 'remeda'
 import { FileBrand, FileBrandSchema } from 'src/models/FileBrand'
 import { FileContentVariety } from 'src/models/FileContentVariety'
-import { FileInfo, getFileInfo } from 'src/models/FileInfo'
-import { getRelativeFilePathFromFileInfo } from 'src/models/Filename'
+import { FileInfo, getFileInfo, getNewUri } from 'src/models/FileInfo'
 import { leanNameSeparator, toString } from 'src/models/Lean/HieroName'
 import { Name, splitNames } from 'src/models/Lean/Name'
 import { NewTypeKeyword, NewTypeKeywordSchema } from 'src/models/NewTypeKeyword'
 import { replaceSnippetVariables } from 'src/utils/SnippetString'
-import { appendPath, getRelativePathFromUri } from 'src/utils/Uri'
+import { getRelativePathFromUri } from 'src/utils/Uri'
 import { CreateNewFileConfig } from 'src/utils/WorkspaceConfiguration/CreateFileConfig'
 import { createFileIfNotExists } from 'src/utils/WorkspaceEdit'
 import { Line, combineFileContent, trimEmpty } from 'src/utils/text'
-import { ensureWorkspaceFolder, getTopLevelDirectoryEntries } from 'src/utils/workspace'
+import { getTopLevelDirectoryEntries } from 'src/utils/workspace'
 import { QuickPickItem, QuickPickItemKind, TextEditor, Uri, commands, window, workspace } from 'vscode'
-import { getUntilValidate } from '../../libs/utils/Getter/getUntilValid'
+import { getUntilParse } from '../../libs/utils/Getter/getUntilValid'
 import { isExcluded, isHidden, leanFileExtensionLong } from '../constants'
 import { getImportLinesFromStrings, getOpenLinesFromStrings } from '../models/Lean/SyntaxNodes'
 import { getDeclarationSnippetLines } from '../utils/Lean/SnippetString'
@@ -26,7 +25,6 @@ import { withImportsOpens, withImportsOpensDerivings } from '../utils/WorkspaceC
 export async function createNewFile() {
   const config = workspace.getConfiguration('lean4CodeActions.createNewFile')
   const editor = ensureEditor()
-  const workspaceFolder = ensureWorkspaceFolder(editor.document.uri)
   const lib = await askLibFromEditor(editor)
   if (lib === undefined) return
   const names = await askNamesFromEditor(editor)
@@ -37,7 +35,7 @@ export async function createNewFile() {
   const { brand, keyword } = variety
   const tags = brand ? [brand] : []
   const info: FileInfo = { lib, namespace, name, tags }
-  const uri = appendPath(workspaceFolder.uri, getRelativeFilePathFromFileInfo(info))
+  const uri = getNewUri(editor.document.uri, info)
   const contents = getTypeFileContentsFromConfigV2(config)(info, keyword)
   await createFileIfNotExists(uri, contents)
   await commands.executeCommand('vscode.open', uri)
@@ -140,7 +138,7 @@ export async function askLib(currentDocumentUri: Uri) {
   // const parentNamespace = toString(currentDocumentParentNames)
   // const value = parentNamespace ? parentNamespace + leanNameSeparator + newName : newName
   // const valueSelection: [number, number] = [value.length - newName.length, value.length]
-  const items: QuickPickItem[] = [
+  const defaultLibItems: QuickPickItem[] = defaultLib ? [
     {
       label: defaultLib,
       kind: QuickPickItemKind.Default,
@@ -149,13 +147,14 @@ export async function askLib(currentDocumentUri: Uri) {
       label: '',
       kind: QuickPickItemKind.Separator,
     },
-    ...libs.map<QuickPickItem>(lib => ({
-      label: lib,
-      kind: QuickPickItemKind.Default,
-    })),
-  ]
+  ] : []
+  const libItems: QuickPickItem[] = libs.map<QuickPickItem>(lib => ({
+    label: lib,
+    kind: QuickPickItemKind.Default,
+  }))
+  const items = concat(defaultLibItems, libItems)
   const result = await window.showQuickPick(items, { title: 'Pick a library' })
-  return result && result.label
+  return result?.label
 }
 
 export const askFilename = async (name: string, currentDocumentUri: Uri) => {
@@ -178,7 +177,7 @@ export const askFilename = async (name: string, currentDocumentUri: Uri) => {
       valueSelection,
     })
   }
-  return getUntilValidate(getUntilValidMax, validate)(get)
+  return getUntilParse(getUntilValidMax, validate)(get)
 }
 
 export const getTypeFileContentsCV1 = (config: CreateNewFileConfig) => getTypeFileContentsV1(config.imports, config.opens, config.derivings)

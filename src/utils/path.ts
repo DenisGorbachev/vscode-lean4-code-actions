@@ -21,7 +21,8 @@ export function getLeanImportPathFromRelativeFilePath(path: string) {
 
 export function getLeanNamesFromWorkspaceSymbolFilePath(location: Precint) {
   const splinters = getLeanNameSplintersFromLocation(location)
-  if (splinters.length) splinters[splinters.length - 1] = splinters[splinters.length - 1].replace('.lean', '')
+  const filename = splinters[splinters.length - 1]
+  if (filename) splinters[splinters.length - 1] = filename.replace('.lean', '')
   return splinters
 }
 
