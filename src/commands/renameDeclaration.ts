@@ -44,7 +44,9 @@ const replaceDeclarationName = (oldName: string, newName: string) => (uri: Uri) 
 }
 
 const replaceNamespace = (oldName: string, newName: string) => (uri: Uri) => (edit: WorkspaceEdit) => {
-  throw new Error('Function not implemented.')
+  const prev = `namespace ${oldName}`
+  const next = `namespace ${newName}`
+  findReplace(prev, next)(uri)(edit)
 }
 
 const findReplace = (prev: string, next: string) => (uri: Uri) => (edit: WorkspaceEdit) => {
