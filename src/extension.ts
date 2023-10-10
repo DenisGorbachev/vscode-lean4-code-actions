@@ -10,7 +10,7 @@ import { createFreewriteFile } from './commands/createFreewriteFile'
 import { createNewFile } from './commands/createNewFile'
 import { createNewFileSet } from './commands/createNewFileSet'
 import { extractDefinitionToSeparateFile } from './commands/extractDefinitionToSeparateFile'
-import { setArgumentStyle } from './commands/setArgumentStyle'
+import { setArgumentStyle, renameDeclaration } from './commands/setArgumentStyle'
 import { onDidRenameFiles } from './listeners/onDidRenameFiles'
 import { getFileInfoFromUri } from './models/FileInfo'
 import { getImportLinesFromStrings, getOpenLinesFromStrings } from './models/Lean/SyntaxNodes'
@@ -34,6 +34,7 @@ export function activate(context: ExtensionContext) {
   const createNewFileSetCommand = commands.registerCommand('lean4CodeActions.createNewFileSet', createNewFileSet)
 
   const setArgumentStyleCommand = commands.registerCommand('lean4CodeActions.setArgumentStyle', setArgumentStyle)
+  const renameDeclarationCommand = commands.registerCommand('lean4CodeActions.renameDeclaration', renameDeclaration)
 
   // const renameLocalVariableCommand = commands.registerCommand('lean4CodeActions.renameLocalVariable', renameLocalVariable)
 
@@ -164,6 +165,7 @@ export function activate(context: ExtensionContext) {
   context.subscriptions.push(createNewFileCommand)
   context.subscriptions.push(createNewFileSetCommand)
   context.subscriptions.push(setArgumentStyleCommand)
+  context.subscriptions.push(renameDeclarationCommand)
   context.subscriptions.push(completions)
   if (config.get('registerRenameProvider')) {
     languages.registerRenameProvider({ language: 'lean4' }, { provideRenameEdits })
