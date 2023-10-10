@@ -13,6 +13,10 @@ export interface FileInfo {
   tags: Name[]
 }
 
+export function createFileInfo(lib: string, namespace: Name[], name: Name, tags: Name[]): FileInfo {
+  return { lib, namespace, name, tags }
+}
+
 export const getFileInfo = (pathname: string): FileInfo | undefined => {
   const { dir, name: basename } = path.parse(pathname)
   const dirSplinters = dir.split(path.sep).filter(not(isEmpty))
