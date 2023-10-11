@@ -1,5 +1,5 @@
+import { toArray } from 'libs/utils/IterableIterator/fun'
 import { isDefined } from 'remeda'
-import { toArray } from 'src/utils/IterableIterator'
 import { escapeRegExp } from 'voca'
 import { CancellationToken, Position, TextDocument, WorkspaceEdit } from 'vscode'
 import { replaceAtMulti } from '../../libs/utils/string'

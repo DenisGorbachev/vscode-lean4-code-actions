@@ -1,6 +1,6 @@
 import { leanNameSeparator } from 'src/models/Lean/HieroName'
 import { Position, TextEditor, window } from 'vscode'
-import { lastOfIterator } from './IterableIterator'
+import { lastOfIterator } from '../../libs/utils/IterableIterator/fun'
 
 export function getImportInsertPosition(editor: TextEditor) {
   const { selection, document } = editor
