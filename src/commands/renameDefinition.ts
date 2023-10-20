@@ -1,4 +1,4 @@
-import { getUntilParseSchema } from 'libs/utils/zod/getUntilParseSchema'
+import { getUntilParseDefinedSchema } from 'libs/utils/zod/getUntilParseSchema'
 import { merge } from 'remeda'
 import { getFileInfoFromEditor, getNewUri } from 'src/models/FileInfo'
 import { NewTypeKeywordSchema } from 'src/models/NewTypeKeyword'
@@ -28,7 +28,7 @@ export async function renameDeclaration() {
 const NewNameSchema = z.string().min(1)
 
 const askName = async (oldName: string) => {
-  return getUntilParseSchema(10, NewNameSchema)(async () => window.showInputBox({
+  return getUntilParseDefinedSchema(10, NewNameSchema)(async () => window.showInputBox({
     title: 'New name',
     value: oldName,
     valueSelection: [0, oldName.length],

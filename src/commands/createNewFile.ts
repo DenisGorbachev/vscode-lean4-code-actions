@@ -1,3 +1,4 @@
+import { getUntilParseDefined } from 'libs/utils/Getter/getUntilValid'
 import { ensureNonEmptyArray, isNonEmptyArray } from 'libs/utils/array/ensureNonEmptyArray'
 import path from 'path'
 import { concat, identity } from 'remeda'
@@ -14,7 +15,6 @@ import { createFileIfNotExists } from 'src/utils/WorkspaceEdit'
 import { Line, combineFileContent, trimEmpty } from 'src/utils/text'
 import { getTopLevelDirectoryEntries } from 'src/utils/workspace'
 import { QuickPickItem, QuickPickItemKind, TextEditor, Uri, commands, window, workspace } from 'vscode'
-import { getUntilParse } from '../../libs/utils/Getter/getUntilValid'
 import { isExcluded, isHidden, leanFileExtensionLong } from '../constants'
 import { getImportLinesFromStrings, getOpenLinesFromStrings } from '../models/Lean/SyntaxNodes'
 import { getDeclarationSnippetLines } from '../utils/Lean/SnippetString'
@@ -170,14 +170,12 @@ export const askFilename = async (name: string, currentDocumentUri: Uri) => {
     if (ext !== leanFileExtensionLong) throw new Error(`Extension must be equal to ${leanFileExtensionLong}`)
     return filepath
   }
-  const get = async () => {
-    return window.showInputBox({
-      title: 'New file path',
-      value,
-      valueSelection,
-    })
-  }
-  return getUntilParse(getUntilValidMax, validate)(get)
+  const get = async () => window.showInputBox({
+    title: 'New file path',
+    value,
+    valueSelection,
+  })
+  return getUntilParseDefined(getUntilValidMax, validate)(get)
 }
 
 export const getTypeFileContentsCV1 = (config: CreateNewFileConfig) => getTypeFileContentsV1(config.imports, config.opens, config.derivings)
