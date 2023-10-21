@@ -1,4 +1,4 @@
-import { getUntilParseDefinedSchema } from 'libs/utils/zod/getUntilParseSchema'
+import { getUntilMap, getUntilParseP } from 'libs/utils/Getter/getUntilValid'
 import { merge } from 'remeda'
 import { getFileInfoFromEditor, getNewUri } from 'src/models/FileInfo'
 import { NewTypeKeywordSchema } from 'src/models/NewTypeKeyword'
@@ -6,6 +6,8 @@ import { withWorkspaceEdit } from 'src/utils/WorkspaceEdit'
 import { Range, TextEditor, WorkspaceEdit, window } from 'vscode'
 import { z } from 'zod'
 import { ensureEditor } from '../utils/TextEditor'
+import { getParserPFromSchema } from 'libs/utils/zod/Parser'
+import { getParserUP } from '../../libs/utils/Parser/getParserU'
 
 export async function renameDeclaration() {
   // const config = workspace.getConfiguration('lean4CodeActions.createNewFile')
@@ -28,11 +30,13 @@ export async function renameDeclaration() {
 const NewNameSchema = z.string().min(1)
 
 const askName = async (oldName: string) => {
-  return getUntilParseDefinedSchema(10, NewNameSchema)(async () => window.showInputBox({
+  const get = async () => window.showInputBox({
     title: 'New name',
     value: oldName,
     valueSelection: [0, oldName.length],
-  }))
+  })
+  const parse = getParserUP(getParserPFromSchema(NewNameSchema))
+  return getUntilParseP(get, parse)()
 }
 
 const replaceDeclarationName = (oldName: string, newName: string) => (editor: TextEditor) => (edit: WorkspaceEdit) => {
@@ -63,4 +67,3 @@ const findReplace = (prev: string, next: string) => (editor: TextEditor) => (edi
     startIndex = text.indexOf(prev, endIndex)
   }
 }
-

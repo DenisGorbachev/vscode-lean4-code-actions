@@ -1,4 +1,3 @@
-import { getUntilParseDefined } from 'libs/utils/Getter/getUntilValid'
 import { ensureNonEmptyArray, isNonEmptyArray } from 'libs/utils/array/ensureNonEmptyArray'
 import path from 'path'
 import { concat, identity } from 'remeda'
@@ -12,15 +11,16 @@ import { replaceSnippetVariables } from 'src/utils/SnippetString'
 import { getRelativePathFromUri } from 'src/utils/Uri'
 import { CreateNewFileConfig } from 'src/utils/WorkspaceConfiguration/CreateFileConfig'
 import { createFileIfNotExists } from 'src/utils/WorkspaceEdit'
-import { Line, combineFileContent, trimEmpty } from 'src/utils/text'
+import { combineFileContent, Line, trimEmpty } from 'src/utils/text'
 import { getTopLevelDirectoryEntries } from 'src/utils/workspace'
-import { QuickPickItem, QuickPickItemKind, TextEditor, Uri, commands, window, workspace } from 'vscode'
+import { commands, QuickPickItem, QuickPickItemKind, TextEditor, Uri, window, workspace } from 'vscode'
 import { isExcluded, isHidden, leanFileExtensionLong } from '../constants'
 import { getImportLinesFromStrings, getOpenLinesFromStrings } from '../models/Lean/SyntaxNodes'
 import { getDeclarationSnippetLines } from '../utils/Lean/SnippetString'
 import { StaticQuickPickItem } from '../utils/QuickPickItem'
 import { ensureEditor, getSelectedName, getSelectedNames } from '../utils/TextEditor'
 import { withImportsOpens, withImportsOpensDerivings } from '../utils/WorkspaceConfiguration/withImportsOpensDerivings'
+import { getUntilIsValidP } from '../../libs/utils/Getter/getUntilValid'
 
 export async function createNewFile() {
   const config = workspace.getConfiguration('lean4CodeActions.createNewFile')
@@ -86,8 +86,6 @@ export const askFileContentVariety = (names: Name[]) => async (currentDocumentUr
   })
   return result && result.value
 }
-
-const getUntilValidMax = 10
 
 export async function askNames(currentDocumentUri: Uri) {
   const info = getFileInfo(workspace.asRelativePath(currentDocumentUri))
@@ -165,17 +163,17 @@ export const askFilename = async (name: string, currentDocumentUri: Uri) => {
   const suffix = leanFileExtensionLong
   const value = prefix + name + suffix
   const valueSelection: [number, number] = [prefix.length, prefix.length + name.length]
-  const validate = async (filepath: string) => {
+  const isValid = async (filepath: string | undefined) => {
+    if (filepath === undefined) return false
     const { ext } = path.parse(filepath)
-    if (ext !== leanFileExtensionLong) throw new Error(`Extension must be equal to ${leanFileExtensionLong}`)
-    return filepath
+    return ext === leanFileExtensionLong
   }
   const get = async () => window.showInputBox({
     title: 'New file path',
     value,
     valueSelection,
   })
-  return getUntilParseDefined(getUntilValidMax, validate)(get)
+  return getUntilIsValidP(get, isValid)()
 }
 
 export const getTypeFileContentsCV1 = (config: CreateNewFileConfig) => getTypeFileContentsV1(config.imports, config.opens, config.derivings)
