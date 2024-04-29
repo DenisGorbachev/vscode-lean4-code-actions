@@ -4,7 +4,7 @@ export const leanFileExtensionShort = 'lean'
 
 export const leanFileExtensionLong = '.' + leanFileExtensionShort
 
-export const excludedDirs = ['build', 'lake-packages']
+export const excludedDirs = ['build', 'lake-packages', '.lake']
 
 export const exclude: GlobPattern = `{${excludedDirs.join(',')}}`
 
